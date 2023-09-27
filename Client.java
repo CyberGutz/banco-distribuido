@@ -1,67 +1,128 @@
-/* 
-Classname: CalculadoraClient 
-Proposito: O cliente RMI
 
-Implementação de um simples sistema RMI
+import java.rmi.*;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Scanner;
 
-Este é um sistema de RMI simples com um cliente e um servidor. 
-O servidor contém os métodos descritos na interface CalculadoraAPI, 
-que retornam para o cliente o valor calculado pelo servidor.
+public class Client {
 
-Este sistema RMI contém os seguintes arquivos:
+	public static Scanner scanner = new Scanner(System.in);
+	public static API objetoRemoto = null;
 
-- CalculadoraAPI.java: 	  interface remota.
-- CalculadoraClient.java: aplicação cliente no sistema RMI.
-- CalculadoraServer.java: aplicativo de servidor no sistema RMI.
+	public static void main(String args[]) {
 
-*/
+		try {
+			// Localiza o objeto remoto, através do nome cadastrado no registro RMI do
+			// localhost
+			objetoRemoto = (API) Naming.lookup("rmi://localhost/calc");
 
-import java.rmi.*; 
+			// Localiza o objeto remoto, através do nome cadastrado no registro RMI em outra
+			// máquina
+			// objetoRemoto = (CalculadoraAPI)
+			// Naming.lookup("rmi://172.22.70.30:1099/calc");
 
+			String token = BemVindo();
+			System.out.println(token);
+			MenuPrincipal(token);
 
-public class Client { 
-	
-	public static void main(String args[]) { 
+		} catch (Exception erro) {
+			// DEBUG
+			System.out.println("ERRO: Client " + erro.getMessage());
+			erro.printStackTrace();
+		}
+	}
 
-		API objetoRemoto = null; 
+	public static String BemVindo() {
 
-		try { 
+		int op = 0;
+		String usuario, senha;
+		Map<String, String> token = new HashMap<String, String>();
 
-			// Localiza o objeto remoto, através do nome cadastrado no registro RMI do localhost
-			objetoRemoto = (API) Naming.lookup("rmi://localhost/calc"); 
-			
-			// Localiza o objeto remoto, através do nome cadastrado no registro RMI em outra máquina
-			//objetoRemoto = (CalculadoraAPI) Naming.lookup("rmi://172.22.70.30:1099/calc"); 
-			
-			//Invoca os métodos remotos disponibilizados pela interface CalculadoraAPI
-			System.out.println( "Client >> Recebido do servidor RMI: 3 + 2 = " + objetoRemoto.soma(3,2)       ); 
-			System.out.println( "Client >> Recebido do servidor RMI: 3 - 2 = " + objetoRemoto.subtrai(3,2)    ); 
-			System.out.println( "Client >> Recebido do servidor RMI: 3 * 2 = " + objetoRemoto.multiplica(3,2) ); 
-			System.out.println( "Client >> Recebido do servidor RMI: 3 / 2 = " + objetoRemoto.divide(3,2)     ); 
+		while (op == 0) {
 
-		} 
-		catch (Exception erro) { 
-			//DEBUG
-			System.out.println("ERRO: Client " + erro.getMessage()); 
-			erro.printStackTrace(); 
-		} 
-	} 
+			try {
+
+				System.out.println("--- Bem-Vindo! ---");
+				System.out.println("1- Criar Conta");
+				System.out.println("2- Fazer Login");
+				System.out.println("------------------");
+				System.out.print("Selecione a opcao desejada: ");
+				op = scanner.nextInt();
+
+				System.out.print("Informe o usuario: ");
+				usuario = scanner.nextLine();
+				scanner.nextLine();
+
+				System.out.print("Informe a senha: ");
+				senha = scanner.nextLine();
+
+				switch (op) {
+					case 1: {
+						token = objetoRemoto.criarConta(usuario, senha);
+						if (token.containsKey("erro")) {
+							throw new Exception(token.get("erro"));
+						} else {
+							return token.get("token");
+						}
+					}
+					case 2: {
+						token = objetoRemoto.fazerLogin(usuario, senha);
+						if (token.containsKey("erro")) {
+							throw new Exception(token.get("erro"));
+						} else {
+							return token.get("token");
+						}
+					}
+					default: {
+						op = 0;
+						System.out.println("Opção Inválida !");
+					}
+				}
+
+			} catch (Exception e) {
+				op = 0;
+				System.out.println("Houve um erro ao tentar prosseguir: " + e.getMessage() + ". Tente novamente.");
+			}
+
+		}
+		return "";
+	}
+
+	public static void MenuPrincipal(String token) {
+		int op = -1;
+		while (op != 0) {
+			System.out.println("--- MENU PRINCIPAL ---");
+			System.out.println("0- Sair");
+			System.out.println("1- Ver Saldo");
+			System.out.println("2- Ver Extrato");
+			System.out.println("3- Transferir dinheiro");
+			System.out.println("------------------");
+			System.out.print("Selecione a opcao desejada: ");
+			op = scanner.nextInt();
+
+			switch (op) {
+				case 0: {
+					break;
+				}
+				case 1: {
+					// ver saldo
+					break;
+				}
+				case 2: {
+					// ver extrato
+					break;
+				}
+				case 3: {
+					// transferir dinheiro
+					break;
+				}
+				default: {
+					op = -1;
+					System.out.println("Opção Inválida !");
+				}
+			}
+
+		}
+	}
+
 }
-
-/* 
-
-@depecrated Atualmengte o compilador javac já invoca a compilação dos apêndices pelo rmic
-
-Para criar o sistema RMI todos os arquivos tem que estar compilados. Em seguida, o skeleton e stub, 
-que são mecanismos de comunicação padrão com objetos remotos, são criadas com o compilador rmic. 
-
-Após todos os arquivos estiverem compilados (CalculadoraClient, CalculadoraServer e CalculadoraAPI), 
-executando o seguinte comando irá criar o stub e o skeleton: 
-
-	rmic CalculadoraServer
-
-Dois apêndices serão criadas, CalculadoraServer_Stub.class e CalculadoraServer_Skel.class, 
-onde o primeiro representa o lado do cliente do sistema RMI e o segundo representa o lado do 
-servidor do sistema RMI.
-
-*/
