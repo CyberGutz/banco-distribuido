@@ -11,21 +11,29 @@ import org.json.*;
 public class Server extends UnicastRemoteObject implements API {
 
 	public static void main(String args[]) {
+
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			System.out.println("Desligando RMI Registry");
+			try {
+				UnicastRemoteObject.unexportObject(java.rmi.registry.LocateRegistry.getRegistry(1099), true);
+			} catch (Exception e) {	
+			}
+		}));
+
 		try {
+			
+			Server obj = new Server();
+			
+			try{
+				java.rmi.registry.LocateRegistry.getRegistry(1099);
+				System.out.println("Pegando serviço registry já criado");	
+				Naming.rebind("rmi://localhost/calc", obj);
+			}catch(Exception e){
+				System.out.println("Criando registry");
+				java.rmi.registry.LocateRegistry.createRegistry(1099);
+				Naming.bind("rmi://localhost/calc", obj);
+			}
 
-			// Cria um objeto do tipo da classe CalculadoraServer.
-			//Server obj = new Server();
-
-			// Liga (bind) esta instancia de objeto ao nome "calc" no registro RMI no
-			// localhost
-			//Naming.bind("rmi://localhost/calc", obj);
-
-			// Liga (bind) esta instancia de objeto ao nome "Calculadora" em um registro RMI
-			// contido em outra máquina
-			// Naming.rebind("rmi://172.22.70.30:1099/calc", obj);
-			JSONArray jsonArray = new JSONArray(10);
-			System.out.println(jsonArray);
-			// DEBUG
 			System.out.println("Server >> ligado no registro RMI sob o nome 'calc' ");
 
 		} catch (Exception erro) {
@@ -47,6 +55,7 @@ public class Server extends UnicastRemoteObject implements API {
 
 		try {
 
+			System.out.println(String.format("Usuário pedindo criação de conta. Usuario %s Senha %s",usuario,senha));
 			JSONArray jsonArray;
 
 			//tenta ler algum arquivo se já existir
@@ -64,7 +73,8 @@ public class Server extends UnicastRemoteObject implements API {
 
 			FileWriter fileWriter = new FileWriter("users.json"); 
 			jsonArray.write(fileWriter);
-
+			System.out.println();
+			System.out.println("Conta criada com sucesso.");
 			retorno.put("token","zazaza");
 		} catch (Exception e) {
 			retorno.put("erro", e.getMessage());

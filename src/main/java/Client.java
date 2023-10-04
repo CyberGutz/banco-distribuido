@@ -48,13 +48,15 @@ public class Client {
 				System.out.println("------------------");
 				System.out.print("Selecione a opcao desejada: ");
 				op = scanner.nextInt();
+				scanner.nextLine(); //pega \n
 
 				System.out.print("Informe o usuario: ");
 				usuario = scanner.nextLine();
-				scanner.nextLine();
 
 				System.out.print("Informe a senha: ");
 				senha = scanner.nextLine();
+
+				System.out.println(String.format("Usuario: %s, Senha: %s",usuario,senha));
 
 				switch (op) {
 					case 1: {

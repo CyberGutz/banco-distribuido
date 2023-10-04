@@ -1,15 +1,10 @@
-start rmiregistry
-sleep 2
-
-set CLASSPATH=lib/json.jar
-
-javac src/API.java 
-javac src/Client.java  
-javac src/Server.java
+if (-not (Test-Path -Path "target" -PathType Container) -or $args[0]){
+    mvn clean install
+}
 
 #Inicia server em outro terminal
-Start-Process -FilePath "cmd.exe" -ArgumentList "/k java src/Server"
+Start-Process -FilePath "cmd.exe" -ArgumentList "/k java -jar target/server.jar"
 #A mimir alguns segundos pro server iniciar a tempo do client abrir
 sleep 2
-#Inicia client em outro terminal
-Start-Process -FilePath "cmd.exe" -ArgumentList "/k java src/Client"
+#Inicia cliente em outro terminal
+Start-Process -FilePath "cmd.exe" -ArgumentList "/k java -jar target/cliente.jar"
