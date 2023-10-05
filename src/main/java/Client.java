@@ -12,19 +12,9 @@ public class Client {
 	public static void main(String args[]) {
 
 		try {
-			// Localiza o objeto remoto, através do nome cadastrado no registro RMI do
-			// localhost
+			// Localiza o objeto remoto, através do nome cadastrado no registro RMI 
 			objetoRemoto = (API) Naming.lookup("rmi://localhost/calc");
-
-			// Localiza o objeto remoto, através do nome cadastrado no registro RMI em outra
-			// máquina
-			// objetoRemoto = (CalculadoraAPI)
-			// Naming.lookup("rmi://172.22.70.30:1099/calc");
-
-			String token = BemVindo();
-			System.out.println(token);
-			MenuPrincipal(token);
-
+			MenuPrincipal(BemVindo());
 		} catch (Exception erro) {
 			// DEBUG
 			System.out.println("ERRO: Client " + erro.getMessage());
@@ -56,14 +46,13 @@ public class Client {
 				System.out.print("Informe a senha: ");
 				senha = scanner.nextLine();
 
-				System.out.println(String.format("Usuario: %s, Senha: %s",usuario,senha));
-
 				switch (op) {
 					case 1: {
 						token = objetoRemoto.criarConta(usuario, senha);
 						if (token.containsKey("erro")) {
 							throw new Exception(token.get("erro"));
 						} else {
+							System.out.println("Conta criada com sucesso!");
 							return token.get("token");
 						}
 					}
@@ -72,6 +61,7 @@ public class Client {
 						if (token.containsKey("erro")) {
 							throw new Exception(token.get("erro"));
 						} else {
+							System.out.println("Login efetuado com sucesso, bem-vindo de volta!");
 							return token.get("token");
 						}
 					}
