@@ -15,8 +15,8 @@ public class Server extends UnicastRemoteObject implements API {
 
 	public static void main(String args[]) {
 
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			System.out.println("Desligando RMI Registry");
+		//Hook que invoca o desligamento do registry quando o programa é encerrado
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> { 
 			try {
 				UnicastRemoteObject.unexportObject(java.rmi.registry.LocateRegistry.getRegistry(1099), true);
 			} catch (Exception e) {	
@@ -37,7 +37,7 @@ public class Server extends UnicastRemoteObject implements API {
 				Naming.bind("rmi://localhost/calc", obj);
 			}
 
-			System.out.println("Server >> ligado no registro RMI sob o nome 'calc' ");
+			System.out.println("Server ON.");
 
 		} catch (Exception erro) {
 			// DEBUG
@@ -47,12 +47,11 @@ public class Server extends UnicastRemoteObject implements API {
 
 	}
 
-	// Construtor do objeto
 	public Server() throws RemoteException {
 		super(); // invoca o construtor do UnicastRemoteObject
 	}
 
-	// Implementa os métodos remotos disponibilizados pela interface Calculadora
+
 	public Map<String, String> criarConta(String usuario, String senha) throws RemoteException {
 		Map<String, String> retorno = new HashMap<String, String>();
 		String path = "users.json";
@@ -115,7 +114,7 @@ public class Server extends UnicastRemoteObject implements API {
 						userLogin.put("senha", senha);		
 						String token = this.criarToken(userLogin.toString());
 
-						if(jsonUser.getString("senha").equals(token)){ //login deu certo, usuario e senha batem o token cadastrado
+						if(jsonUser.getString("senha").equals(token)){ //login deu certo, usuario e senha inseridos batem o token do usuario cadastrado
 							retorno.put("token", jsonUser.getString("senha"));
 							return retorno;
 						}else{
@@ -138,19 +137,22 @@ public class Server extends UnicastRemoteObject implements API {
 		return retorno;
 	}
 
+	/**
+	 *  Recebe uma string e retorna um token representando-a
+	 *  Neste caso a string será um pequeno json representando um usuario e uma senha
+	 * 
+	 * @param data
+	 * @return token
+	 */
 	private String criarToken(String data){
 		try {			
 			MessageDigest digest = MessageDigest.getInstance("SHA-256");
-   
-		   // Update the digest with the input data
-		   digest.update(data.getBytes());
-   
-		   // Generate the hash as a byte array
+
+		   digest.update(data.getBytes());   
 		   byte[] hashBytes = digest.digest();
    
-		   // Convert the byte array to a hexadecimal string
 		   StringBuilder hashStringBuilder = new StringBuilder();
-		   for (byte b : hashBytes) {
+		   for (byte b : hashBytes) { //constroi o array de bytes como uma string em hexadecimal
 			   hashStringBuilder.append(String.format("%02x", b));
 		   }
    
