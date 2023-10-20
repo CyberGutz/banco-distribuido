@@ -1,7 +1,11 @@
 
-## Abra um terminal (CTRL+ALT+t) e execute (para plataforma windows):
-./run
+## Abra um terminal e execute (para plataforma windows):
+./run-windows
 
+## Abra um terminal e execute (para plataforma Linux):
+./run-linux
+
+### Demais instruções de argumentos nos scripts estão no help oferecido pelos mesmos (basta executá-lo passando o argumento "-h")
 
 ## A interface remota
 
