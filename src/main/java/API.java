@@ -1,11 +1,11 @@
 
 import java.rmi.*; 
-import java.util.Map;
+import Models.User;
 
 public interface API extends Remote { 
 
-	Map<String,String> criarConta(String usuario,String senha) throws RemoteException;
+	User criarConta(String usuario,String senha) throws RemoteException;
 
-	Map<String,String> fazerLogin(String usuario,String senha) throws RemoteException;
+	User fazerLogin(String usuario,String senha) throws RemoteException;
 
 }

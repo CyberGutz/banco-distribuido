@@ -1,12 +1,8 @@
 [
   {
     "senha": "ebb999b2eba1b6680fdd7ef99ae182674c9c9d4014f631df62f5279a1fa7b4d6",
+    "conta": 1,
     "usuario": "admin",
-    "creditos": 1000
-  },
-  {
-    "senha": "7b3e5ef5e3ab99c7ea8440a2a1101e123f2e9ba6983ecd355fa7d22a92e84859",
-    "usuario": "alberto",
     "creditos": 1000
   }
 ]

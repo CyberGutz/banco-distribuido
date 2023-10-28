@@ -1,8 +1,8 @@
 
 import java.rmi.*;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Scanner;
+
+import Models.User;
 
 public class Client {
 
@@ -22,11 +22,11 @@ public class Client {
 		}
 	}
 
-	public static String BemVindo() {
+	public static User BemVindo() {
 
 		int op = 0;
 		String usuario, senha;
-		Map<String, String> token = new HashMap<String, String>();
+		User user = null;
 
 		while (op == 0) {
 
@@ -48,21 +48,21 @@ public class Client {
 
 				switch (op) {
 					case 1: {
-						token = objetoRemoto.criarConta(usuario, senha);
-						if (token.containsKey("erro")) {
-							throw new Exception(token.get("erro"));
+						user = objetoRemoto.criarConta(usuario, senha);
+						if (user.getErro() != null) {
+							throw new Exception(user.getErro());
 						} else {
 							System.out.println("Conta criada com sucesso!");
-							return token.get("token");
+							return user;
 						}
 					}
 					case 2: {
-						token = objetoRemoto.fazerLogin(usuario, senha);
-						if (token.containsKey("erro")) {
-							throw new Exception(token.get("erro"));
+						user = objetoRemoto.fazerLogin(usuario, senha);
+						if (user.getErro() != null) {
+							throw new Exception(user.getErro());
 						} else {
 							System.out.println("Login efetuado com sucesso, bem-vindo de volta!");
-							return token.get("token");
+							return user;
 						}
 					}
 					default: {
@@ -77,13 +77,16 @@ public class Client {
 			}
 
 		}
-		return "";
+		return null;
 	}
 
-	public static void MenuPrincipal(String token) {
+	public static void MenuPrincipal(User user) {
 		int op = -1;
+
 		while (op != 0) {
 			System.out.println("--- MENU PRINCIPAL ---");
+			System.out.println("Olá " + user.getNome());			
+			System.out.println("Conta: " + user.getConta()+"\n");
 			System.out.println("0- Sair");
 			System.out.println("1- Ver Saldo");
 			System.out.println("2- Ver Extrato");
