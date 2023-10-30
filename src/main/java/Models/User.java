@@ -1,20 +1,15 @@
 package Models;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.security.MessageDigest;
 
-import javax.sound.midi.Soundbank;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-
-import Controllers.AuthController;
 
 public class User implements java.io.Serializable {
 
@@ -44,13 +39,16 @@ public class User implements java.io.Serializable {
     }
 
 
-    public JSONObject userJaCriado() {
+    public JSONObject getUserDB() {
 
         try {
             JSONArray jsonArray = new JSONArray(new JSONTokener(new FileReader("users.json")));
             for (Object user : jsonArray) { // verificando se o usuario existe
                 JSONObject jsonUser = new JSONObject(user.toString());
-                if (jsonUser.getString("usuario").equals(this.nome)) {
+                if (jsonUser.getString("usuario").equals(this.nome) || jsonUser.getInt("conta") == this.conta) {
+                    this.setNome(jsonUser.getString("usuario"));
+                    this.setConta(jsonUser.getInt("conta"));
+                    this.setCreditos(jsonUser.getDouble("creditos"));
                     return jsonUser;
                 }
             }
@@ -99,7 +97,7 @@ public class User implements java.io.Serializable {
 
     public void realizarLogin() {
 
-        JSONObject userEncontrado = this.userJaCriado();
+        JSONObject userEncontrado = this.getUserDB();
   
         if (userEncontrado != null) {
 
@@ -183,7 +181,11 @@ public class User implements java.io.Serializable {
     }
 
     public void setErro(String erro) {
-        this.erro = erro;
+        if(this.erro != null || this.erro != ""){
+            this.erro = erro + "|" + this.erro;
+        }else{
+            this.erro = erro;
+        }
     }
 
 }

@@ -2,6 +2,8 @@
 import java.rmi.*;
 import java.util.Scanner;
 
+import org.json.JSONObject;
+
 import Models.User;
 
 public class Client {
@@ -80,41 +82,77 @@ public class Client {
 		return null;
 	}
 
-	public static void MenuPrincipal(User user) {
+	public static void MenuPrincipal(User user) throws RemoteException {
 		int op = -1;
 
 		while (op != 0) {
-			System.out.println("--- MENU PRINCIPAL ---");
-			System.out.println("Olá " + user.getNome());			
-			System.out.println("Conta: " + user.getConta()+"\n");
-			System.out.println("0- Sair");
-			System.out.println("1- Ver Saldo");
-			System.out.println("2- Ver Extrato");
-			System.out.println("3- Transferir dinheiro");
-			System.out.println("------------------");
-			System.out.print("Selecione a opcao desejada: ");
-			op = scanner.nextInt();
+			try {
+				System.out.println("--- MENU PRINCIPAL ---");
+				System.out.println("Olá " + user.getNome());			
+				System.out.println("Conta: " + user.getConta()+"\n");
+				System.out.println("0- Sair");
+				System.out.println("1- Ver Saldo");
+				System.out.println("2- Transferir dinheiro");
+				System.out.println("3- Ver Extrato");
+				System.out.println("------------------");
+				System.out.print("Selecione a opcao desejada: ");
+				op = scanner.nextInt();
 
-			switch (op) {
-				case 0: {
-					break;
+				switch (op) {
+					case 0: {
+						break;
+					}
+					case 1: {
+						user = objetoRemoto.verSaldo(user);
+						if(user.getErro() != null) throw new Exception("Erro ao consultar saldo: " + user.getErro());
+						System.out.println("Seu saldo: R$" + user.getCreditos());
+						break;
+					}
+					case 2: {
+						System.out.println("Digite a conta de destino: ");
+						int contaDestino = scanner.nextInt();
+						System.out.println("Insira o valor: ");
+						double valor = scanner.nextDouble();
+						scanner.nextLine();
+
+						User destino = new User("",contaDestino);
+
+						if(contaDestino == user.getConta()){
+							System.out.println("Não é necessário transferir dinheiro para a sua própria conta");
+							break;
+						}
+
+						if(destino.getUserDB() != null){
+							System.out.println("---Dados da conta destino e transferência---");
+							System.out.println("Nome: " + destino.getNome());
+							System.out.println("Valor da transferência: R$" + valor);
+							System.out.println("Gostaria de continuar com a transferência ? (S/N): ");
+							String opT = scanner.nextLine();
+							System.out.println(opT);
+							if(opT.equals("S") || opT.equals("s")){
+								user = objetoRemoto.transferirDinheiro(user,destino,valor);
+								if(user.getErro() != null) throw new Exception("Erro ao transferir dinheiro: " + user.getErro());
+								System.out.println("Transferência realizada com sucesso !");
+							}
+						}else{
+							System.out.println("Conta não encontrada, tente novamente");
+							break;
+						}
+						break;
+					}
+					case 3: {
+						// ver extrato
+						break;
+					}
+					default: {
+						op = -1;
+						System.out.println("Opção Inválida !");
+					}
 				}
-				case 1: {
-					// ver saldo
-					break;
-				}
-				case 2: {
-					// ver extrato
-					break;
-				}
-				case 3: {
-					// transferir dinheiro
-					break;
-				}
-				default: {
-					op = -1;
-					System.out.println("Opção Inválida !");
-				}
+			} catch (Exception e) {
+				op = -1;
+				System.out.println(e.getMessage());
+				e.printStackTrace();
 			}
 
 		}

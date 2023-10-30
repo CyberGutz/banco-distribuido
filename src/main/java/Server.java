@@ -3,6 +3,7 @@ import java.rmi.*;
 import java.rmi.server.*;
 
 import Controllers.AuthController;
+import Controllers.ContaController;
 import Models.User;
 
 public class Server extends UnicastRemoteObject implements API {
@@ -56,5 +57,14 @@ public class Server extends UnicastRemoteObject implements API {
 		return AuthController.fazerLogin(usuario, senha);
 	}
 
+	public User verSaldo(User user) throws RemoteException {
+		System.out.println(String.format("Usuário %s consultando seu saldo",user.getNome()));
+		return ContaController.verSaldo(user);
+	}
+
+	public User transferirDinheiro(User origem,User destino,double valor) throws RemoteException {
+		System.out.println(String.format("Usuário %s transferindo %.2f pro %s",origem.getNome(),valor,destino.getNome()));
+		return ContaController.transferirDinheiro(origem, destino, valor);
+	}
 
 }
