@@ -122,7 +122,7 @@ public class Client {
 							break;
 						}
 
-						if(destino.getUserDB() != null){
+						if(destino.getUserDB(true) != null){
 							System.out.println("---Dados da conta destino e transferência---");
 							System.out.println("Nome: " + destino.getNome());
 							System.out.println("Valor da transferência: R$" + valor);

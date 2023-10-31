@@ -8,7 +8,7 @@ public class AuthController {
     
         User user = new User(usuario,senha);
 		try {
-            if(user.getUserDB() == null) user.salvar();
+            if(user.getUserDB(false) == null) user.salvar();
 		} catch (Exception e) {
 			user.setErro(e.getMessage());
 		}

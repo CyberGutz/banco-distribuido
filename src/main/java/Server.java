@@ -63,7 +63,7 @@ public class Server extends UnicastRemoteObject implements API {
 	}
 
 	public User transferirDinheiro(User origem,User destino,double valor) throws RemoteException {
-		System.out.println(String.format("Usuário %s transferindo %.2f pro %s",origem.getNome(),valor,destino.getNome()));
+		System.out.println(String.format("Usuário %s transferindo R$%.2f pro %s",origem.getNome(),valor,destino.getNome()));
 		return ContaController.transferirDinheiro(origem, destino, valor);
 	}
 

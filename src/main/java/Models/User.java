@@ -38,17 +38,18 @@ public class User implements java.io.Serializable {
         this.senha = senha;
     }
 
-
-    public JSONObject getUserDB() {
+    public JSONObject getUserDB(boolean refresh) {
 
         try {
             JSONArray jsonArray = new JSONArray(new JSONTokener(new FileReader("users.json")));
             for (Object user : jsonArray) { // verificando se o usuario existe
                 JSONObject jsonUser = new JSONObject(user.toString());
                 if (jsonUser.getString("usuario").equals(this.nome) || jsonUser.getInt("conta") == this.conta) {
-                    this.setNome(jsonUser.getString("usuario"));
-                    this.setConta(jsonUser.getInt("conta"));
-                    this.setCreditos(jsonUser.getDouble("creditos"));
+                    if(refresh){
+                        this.setNome(jsonUser.getString("usuario"));
+                        this.setConta(jsonUser.getInt("conta"));
+                        this.setCreditos(jsonUser.getDouble("creditos"));
+                    }
                     return jsonUser;
                 }
             }
@@ -71,44 +72,63 @@ public class User implements java.io.Serializable {
         } catch (FileNotFoundException e) {
             jsonArray = new JSONArray();
         }
-        
-        
-        JSONObject user = new JSONObject();
-        user.put("usuario", this.nome);
-        user.put("senha", this.senha);
-        String token = User.criarToken(user.toString());
-        user.put("creditos", 1000.00); // começa com 1000 reais
-        user.put("senha", token); // substitui a senha pelo token
-        user.put("conta", contaNum);
-        jsonArray.put(user);
 
-        try {
-            FileWriter fileWriter = new FileWriter("users.json");
-            fileWriter.write(jsonArray.toString());
-            fileWriter.close();
+        JSONObject user = this.getUserDB(true);
 
-            this.setConta(contaNum);
-            this.setCreditos(1000.00);
-        } catch (Exception e) {
-            this.setErro("Erro ao salvar usuário:" + e.getMessage());
+        if (user == null) { // cria novo usuario
+            
+            try {
+                user = new JSONObject();
+                user.put("usuario", this.nome);
+                user.put("senha", this.senha);
+                String token = User.criarToken(user.toString());
+                user.put("creditos", 1000.00); // começa com 1000 reais
+                user.put("senha", token); // substitui a senha pelo token
+                user.put("conta", contaNum);
+                jsonArray.put(user);
+
+                FileWriter fileWriter = new FileWriter("users.json");
+                fileWriter.write(jsonArray.toString());
+                fileWriter.close();
+                this.setConta(contaNum);
+                this.setCreditos(1000.00);
+            } catch (Exception e) {
+                this.setErro("Erro ao salvar usuário:" + e.getMessage());
+            }
+        } else {// atualiza novo usuario
+            try {     
+                System.out.println("Atualizando usuario " + this.getNome());
+                user.put("creditos", this.creditos);
+                user.put("usuario", this.nome);           
+                jsonArray.remove(this.getConta() - 1);
+                System.out.println(user);
+                jsonArray.put(this.getConta() - 1, user);
+                FileWriter fileWriter = new FileWriter("users.json");
+                fileWriter.write(jsonArray.toString());
+                fileWriter.close();
+            } catch (Exception e) {
+                this.setErro("Erro ao alterar usuário:" + e.getMessage());
+            }
+
         }
 
     }
 
     public void realizarLogin() {
 
-        JSONObject userEncontrado = this.getUserDB();
-  
+        JSONObject userEncontrado = this.getUserDB(false);
+
         if (userEncontrado != null) {
 
             int conta = userEncontrado.getInt("conta");
             double creditos = userEncontrado.getDouble("creditos");
-            
-            //removendo atributos, deve ser comparado o token gerado apenas com as chaves "usuario" e "senha " do JSON
+
+            // removendo atributos, deve ser comparado o token gerado apenas com as chaves
+            // "usuario" e "senha " do JSON
             userEncontrado.remove("conta");
             userEncontrado.remove("creditos");
-            userEncontrado.put("senha",this.senha);
-            
+            userEncontrado.put("senha", this.senha);
+
             JSONObject userLogin = new JSONObject();
             userLogin.put("usuario", this.nome);
             userLogin.put("senha", this.senha);
@@ -151,7 +171,7 @@ public class User implements java.io.Serializable {
             return e.getMessage();
         }
     }
-    
+
     public void setNome(String nome) {
         this.nome = nome;
     }
@@ -181,9 +201,9 @@ public class User implements java.io.Serializable {
     }
 
     public void setErro(String erro) {
-        if(this.erro != null || this.erro != ""){
+        if (this.erro != null || this.erro != "") {
             this.erro = erro + "|" + this.erro;
-        }else{
+        } else {
             this.erro = erro;
         }
     }
