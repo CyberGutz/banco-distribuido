@@ -73,7 +73,7 @@ public class User implements java.io.Serializable {
             jsonArray = new JSONArray();
         }
 
-        JSONObject user = this.getUserDB(true);
+        JSONObject user = this.getUserDB(false);
 
         if (user == null) { // cria novo usuario
             
@@ -97,12 +97,19 @@ public class User implements java.io.Serializable {
             }
         } else {// atualiza novo usuario
             try {     
+                
                 System.out.println("Atualizando usuario " + this.getNome());
                 user.put("creditos", this.creditos);
                 user.put("usuario", this.nome);           
-                jsonArray.remove(this.getConta() - 1);
-                System.out.println(user);
-                jsonArray.put(this.getConta() - 1, user);
+                
+                for(int i=0;i < jsonArray.length();i++){
+                    JSONObject userJson = new JSONObject(jsonArray.get(i).toString());
+                    if(userJson.getInt("conta") == this.conta){
+                        jsonArray.put(i,user);
+                        break;
+                    }
+                }
+
                 FileWriter fileWriter = new FileWriter("users.json");
                 fileWriter.write(jsonArray.toString());
                 fileWriter.close();

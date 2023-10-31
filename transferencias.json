@@ -1,1 +1,14 @@
-[{"contaDestino":2,"contaOrigem":1,"data":"Mon Oct 30 21:54:06 BRT 2023","valor":20},{"contaDestino":1,"contaOrigem":2,"data":"Mon Oct 30 21:55:08 BRT 2023","valor":20}]
+[
+  {
+    "contaDestino": 1,
+    "contaOrigem": 2,
+    "data": "31/10/2023 20:41:45",
+    "valor": 30.45
+  },
+  {
+    "contaDestino": 2,
+    "contaOrigem": 1,
+    "data": "31/10/2023 20:44:59",
+    "valor": 130.45
+  }
+]

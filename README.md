@@ -38,3 +38,14 @@ ou valores de retorno são algumas das razões para o fracasso da comunicação 
 é uma exceção que deve ser tratada pelo método chamador. O compilador confirma que o programador 
 de ter lidado com essas exceções.
 
+## Requisitos Funcionais
+
+ - Login
+ - Cadastro
+  - Visualização de Saldo
+ -  Transferência de Dinheiro
+ - Ver Extrato
+
+## Requisitos Não Funcionais
+
+...

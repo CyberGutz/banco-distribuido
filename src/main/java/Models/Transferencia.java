@@ -43,7 +43,7 @@ public class Transferencia implements java.io.Serializable {
             transferencia.put("contaOrigem", this.origem.getConta());            
             transferencia.put("contaDestino", this.destino.getConta());
             transferencia.put("valor", this.valor);
-            transferencia.put("data", new SimpleDateFormat("dd/mm/yyyy hh:mm:ss").format(this.data));
+            transferencia.put("data", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(this.data));
 
             jsonArray.put(transferencia);
 
