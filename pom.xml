@@ -17,6 +17,12 @@
             <artifactId>json</artifactId>
             <version>20230618</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.jgroups/jgroups -->
+        <dependency>
+            <groupId>org.jgroups</groupId>
+            <artifactId>jgroups</artifactId>
+            <version>3.6.4.Final</version>
+        </dependency>
     </dependencies>
 
     <build>
