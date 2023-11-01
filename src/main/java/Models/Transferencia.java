@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 import org.json.JSONArray;
@@ -25,6 +26,10 @@ public class Transferencia implements java.io.Serializable {
         this.destino = destino;
         this.valor = valor;
         this.data = data;
+    }
+
+    public Transferencia(User origem){
+        this.origem = origem;
     }
 
     public void salvar() throws IOException {
@@ -56,19 +61,19 @@ public class Transferencia implements java.io.Serializable {
     }
 
     
-    public User getOrigem() {
+    public User getUserOrigem() {
         return origem;
     }
 
-    public void setOrigem(User origem) {
+    public void setUserOrigem(User origem) {
         this.origem = origem;
     }
 
-    public User getDestino() {
+    public User getUserDestino() {
         return destino;
     }
 
-    public void setDestino(User destino) {
+    public void setUserDestino(User destino) {
         this.destino = destino;
     }
 
@@ -86,6 +91,37 @@ public class Transferencia implements java.io.Serializable {
 
     public void setData(Date data) {
         this.data = data;
+    }
+
+    public ArrayList<Transferencia> getTransferenciasUserOrigem(){
+        try {
+            
+            JSONArray jsonArray = new JSONArray(new JSONTokener(new FileReader("transferencias.json")));
+            ArrayList<Transferencia> transferencias = new ArrayList<Transferencia>();
+            System.out.println(this.origem.getConta());
+            for(int i=0; i < jsonArray.length();i++){
+                JSONObject jsonObj = jsonArray.getJSONObject(i);
+                if(jsonObj.getInt("contaOrigem") == this.origem.getConta() || jsonObj.getInt("contaDestino") == this.origem.getConta()){
+                    
+                    User origem = new User("", jsonObj.getInt("contaOrigem"));
+                    origem.getUserDB(true);
+                    User destino = new User("", jsonObj.getInt("contaDestino"));
+                    destino.getUserDB(true);
+
+                    transferencias.add(new Transferencia(
+                                        origem, 
+                                        destino, 
+                                        jsonObj.getDouble("valor"),
+                                        new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(jsonObj.getString("data"))
+                                        ));
+                }
+            }
+
+            return transferencias;
+        } catch (Exception e) {
+            this.erro = e.getMessage();
+            return null;
+        }
     }
 
     public String getErro() {

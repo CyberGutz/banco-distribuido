@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -140,6 +141,7 @@ public class User implements java.io.Serializable {
             userLogin.put("usuario", this.nome);
             userLogin.put("senha", this.senha);
 
+            //verifica se a combinação usuario e senha inserida pelo usuario gera o token de autenticação criado para o mesmo
             if (User.criarToken(userLogin.toString()).equals(User.criarToken(userEncontrado.toString()))) {
                 // retorno.put("token", jsonUser.getString("senha"));
                 this.setConta(conta);
@@ -201,6 +203,11 @@ public class User implements java.io.Serializable {
 
     public void setCreditos(double creditos) {
         this.creditos = creditos;
+    }
+
+    public ArrayList<Transferencia> getExtrato(){
+        Transferencia transf = new Transferencia(this);
+        return transf.getTransferenciasUserOrigem();
     }
 
     public String getErro() {

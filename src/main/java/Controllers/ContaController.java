@@ -1,5 +1,7 @@
 package Controllers;
 
+import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import Models.Transferencia;
@@ -34,5 +36,13 @@ public class ContaController {
         }
         return origem;
     }
+
+    public static ArrayList<Transferencia> obterExtrato(User user) {
+        try {
+            return user.getExtrato();
+        } catch (Exception e) {
+            return null;
+        }
+    };
 
 }

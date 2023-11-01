@@ -1,9 +1,10 @@
 import java.rmi.*;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-import org.json.JSONObject;
-
+import Models.Transferencia;
 import Models.User;
 
 public class Client {
@@ -144,7 +145,26 @@ public class Client {
 						break;
 					}
 					case 3: {
-						// ver extrato
+						final User userTransf = user; //bkp do usuario para que eu possa usar o mesmo como comparação no forEach
+						ArrayList<Transferencia> transferencias = objetoRemoto.obterExtrato(userTransf);
+						System.out.println(String.format("------- Extrato Bancario %s --------",user.getNome()));
+						if(transferencias.isEmpty()){
+							System.out.println("Nenhuma transferencia para esta conta foi encontrada");
+						}else{
+							
+							System.out.println("##################################");
+							transferencias.forEach(transferencia -> {
+								if(transferencia.getUserOrigem().getConta() == userTransf.getConta()){
+									System.out.println("Enviou para: " + transferencia.getUserDestino().getNome() + " - Conta " + transferencia.getUserDestino().getConta());	
+								}else{
+									System.out.println("Recebeu de: " + transferencia.getUserOrigem().getNome() + " - Conta " + transferencia.getUserOrigem().getConta());	
+								}
+								System.out.println("Valor da transferência: " + transferencia.getValor());
+								System.out.println("Data da transferência: " + new SimpleDateFormat("dd/MM/yyyy").format(transferencia.getData()) + " às " + new SimpleDateFormat("HH:mm:ss").format(transferencia.getData()));
+								System.out.println("##################################");
+							});
+						}
+						System.out.println("----------------------------------------------------");
 						break;
 					}
 					default: {

@@ -1,5 +1,8 @@
 
-import java.rmi.*; 
+import java.rmi.*;
+import java.util.ArrayList;
+
+import Models.Transferencia;
 import Models.User;
 
 public interface API extends Remote { 
@@ -12,4 +15,5 @@ public interface API extends Remote {
 	
 	User transferirDinheiro(User origem,User destino,double valor) throws RemoteException;
 	
+	ArrayList<Transferencia> obterExtrato(User user) throws RemoteException;
 }
