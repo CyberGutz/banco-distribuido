@@ -16,7 +16,7 @@ public class Client {
 
 		try {
 			// Localiza o objeto remoto, através do nome cadastrado no registro RMI
-			objetoRemoto = (API) Naming.lookup("rmi://localhost/calc");
+			objetoRemoto = (API) Naming.lookup("rmi://localhost/banco");
 			MenuPrincipal(BemVindo());
 		} catch (Exception erro) {
 			// DEBUG
@@ -151,7 +151,6 @@ public class Client {
 						if(transferencias.isEmpty()){
 							System.out.println("Nenhuma transferencia para esta conta foi encontrada");
 						}else{
-							
 							System.out.println("##################################");
 							transferencias.forEach(transferencia -> {
 								if(transferencia.getUserOrigem().getConta() == userTransf.getConta()){

@@ -3,6 +3,10 @@ import java.rmi.*;
 import java.rmi.server.*;
 import java.util.ArrayList;
 
+import org.jgroups.JChannel;
+import org.jgroups.Message;
+import org.jgroups.ReceiverAdapter;
+
 import Controllers.AuthController;
 import Controllers.ContaController;
 import Models.Transferencia;
@@ -27,12 +31,23 @@ public class Server extends UnicastRemoteObject implements API {
 			try{
 				java.rmi.registry.LocateRegistry.getRegistry(1099);
 				System.out.println("Pegando serviço registry já criado");	
-				Naming.rebind("rmi://localhost/calc", obj);
+				Naming.rebind("rmi://localhost/banco", obj);
 			}catch(Exception e){
 				System.out.println("Criando registry");
 				java.rmi.registry.LocateRegistry.createRegistry(1099);
-				Naming.bind("rmi://localhost/calc", obj);
+				Naming.bind("rmi://localhost/banco", obj);
 			}
+
+			 JChannel channel=new JChannel("protocolos.xml");
+  			 channel.setReceiver(new ReceiverAdapter() {
+				public void receive(Message msg) {
+					System.out.println("mensagem de " + msg.getSrc() + ": " + msg.getObject());
+				}
+			});
+
+			channel.connect("banco");
+			channel.send(new Message(null, "hello world"));
+			channel.close();
 
 			System.out.println("Server ON.");
 
