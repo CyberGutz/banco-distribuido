@@ -13,21 +13,23 @@ public class RMIServerController extends Thread {
 
         try {
 
+            final String ip = "239.1.1.1";
+            final int port = 9000;
+    
         	//criando socket UDP multicast 
-            MulticastSocket socket = new MulticastSocket(9000);
-            InetAddress addr = InetAddress.getByName("239.1.1.1");
+            MulticastSocket socket = new MulticastSocket(port);
+            InetAddress addr = InetAddress.getByName(ip);
             socket.joinGroup(addr);
 
             byte[] buffer = new byte[256];
-            DatagramPacket pacote = new DatagramPacket(buffer, buffer.length);
+            DatagramPacket pacote = new DatagramPacket(buffer, buffer.length,addr,port);
             System.out.println("Aguardando receber pedido de stub");
             socket.receive(pacote);
 
             String msg = new String(pacote.getData(),0,pacote.getLength());
-            
             System.out.println("Mensagem recebida: " + msg);
 
-            if(msg == "rmiclient"){
+            if(msg.equals("rmiclient")){
                 
                 Server obj = new Server();
                 try{
@@ -40,11 +42,11 @@ public class RMIServerController extends Thread {
                     Naming.bind("rmi://localhost/banco", obj);
                 }
                 
-                msg = String.format("rmi://%s/banco", InetAddress.getLocalHost());
+                msg = String.format("rmi://%s/banco", InetAddress.getLocalHost().getHostAddress());
+                System.out.println("Retornando stub: " + msg);
 
-                System.out.println("Retornando stub" + msg);
                 byte[] bufferSend = msg.getBytes();
-                pacote = new DatagramPacket(bufferSend, bufferSend.length);
+                pacote = new DatagramPacket(bufferSend, bufferSend.length,addr,port);
                 socket.send(pacote);
             }
 

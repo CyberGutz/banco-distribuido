@@ -21,13 +21,7 @@ public class Client {
 	public static void main(String args[]) {
 
 		try {
-			// Localiza o objeto remoto, através do nome cadastrado no registro RMI
-			String nomeServer = null;
-			// while (nomeServer == null) {
-				// Thread.sleep(2000);
-			nomeServer = obterNomeServidor();
-			// }
-			objetoRemoto = (API) Naming.lookup(nomeServer);
+			realizarLookup();
 			MenuPrincipal(BemVindo());
 		} catch (Exception erro) {
 			System.out.println("ERRO: Client " + erro.getMessage());
@@ -35,40 +29,58 @@ public class Client {
 		}
 	}
 
+	public static void realizarLookup(){
+		
+		try {
+			
+			String addr = null;
+			while(addr == null){
+				System.out.println("lookup");
+				addr = obterNomeServidor();
+				objetoRemoto = (API) Naming.lookup(addr);
+				System.out.println("lookup op");
+			}
+		} catch (Exception e) {
+			System.out.println("Houve um problema ao realizar o lookup: " + e.getMessage());
+		}
+	}
+
 	public static String obterNomeServidor() throws IOException {
 
 		MulticastSocket socket = null;
 		InetAddress addr = null;
+		String rmiAddr = null;
+		final String ip = "239.1.1.1";
+		final int port = 9000;
 
 		try {
 
 			// criando socket UDP multicast
-			socket = new MulticastSocket(9000);
-			InetAddress.getByName("239.1.1.1");
+			socket = new MulticastSocket(port);
+			addr = InetAddress.getByName(ip);
 			socket.joinGroup(addr);
 
 			byte[] bufferSend = "rmiclient".getBytes();
-			DatagramPacket pacote = new DatagramPacket(bufferSend, bufferSend.length);
-			System.out.println(new String(pacote.getData(), 0, pacote.getLength()).toString());
-			System.out.println("Enviando mensagem");
-			socket.send(pacote);
-			System.out.println("Mandou mensagem");
+			DatagramPacket pedido = new DatagramPacket(bufferSend, bufferSend.length,addr,port);
+			
+			while (true) {
+				
+				socket.send(pedido);
 
-			byte[] buffer = new byte[256];
-			pacote = new DatagramPacket(buffer, buffer.length);
-			System.out.println("Esperando chegar mensagem");
-			socket.receive(pacote);
+				byte[] buffer = new byte[256];
+				DatagramPacket resposta = new DatagramPacket(buffer, buffer.length,addr,port);
+				socket.receive(resposta);
+	
+				String msg = new String(resposta.getData(), 0, resposta.getLength());
 
-			String msg = new String(pacote.getData(), 0, pacote.getLength());
+				if(!msg.equals("rmiclient")){
+					rmiAddr = msg;
+					break;
+				}
 
-			System.out.println("Mensagem recebida: " + msg);
-
-			if (msg != "rmiclient") {
-				socket.leaveGroup(addr);
-				socket.close();
-				return msg;
+				Thread.sleep(1000);
 			}
-
+			
 		} catch (Exception e) {
 			System.out.println("Erro ao receber stub: " + e.getMessage());
 			e.printStackTrace();
@@ -76,7 +88,7 @@ public class Client {
 			socket.leaveGroup(addr);
 			socket.close();
 		}
-		return null;
+		return rmiAddr;
 	}
 
 	public static User BemVindo() {
@@ -128,7 +140,13 @@ public class Client {
 					}
 				}
 
-			} catch (Exception e) {
+			}catch (RemoteException e){
+				op = 0;
+				System.out.println("Houve um erro ao tentar prosseguir. Tente novamente");
+				System.out.println("Causa: " + e.getMessage());
+				realizarLookup();
+			} 
+			catch (Exception e) {
 				op = 0;
 				System.out.println("Houve um erro ao tentar prosseguir: " + e.getMessage() + ". Tente novamente.");
 			}
@@ -230,7 +248,14 @@ public class Client {
 						System.out.println("Opção Inválida !");
 					}
 				}
-			} catch (InputMismatchException e) {
+			} 
+			catch (RemoteException e){
+				op = -1;
+				System.out.println("Houve um erro de servidor ao tentar prosseguir. Tente novamente");
+				System.out.println("Causa: " + e.getMessage());
+				realizarLookup();
+			} 
+			catch (InputMismatchException e) {
 				op = -1;
 				scanner.nextLine();
 				System.out.println("Entrada inválida ! Tente novamente");

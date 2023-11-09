@@ -47,7 +47,6 @@ public class Server extends UnicastRemoteObject implements API {
 		super(); // invoca o construtor do UnicastRemoteObject
 	}
 
-
 	public User criarConta(String usuario, String senha) throws RemoteException {
 		System.out.println(String.format("Usuário pedindo criação de conta. Usuario %s Senha %s",usuario,senha));
 		return AuthController.criarConta(usuario, senha);
@@ -80,12 +79,8 @@ public class Server extends UnicastRemoteObject implements API {
 		System.out.println("Rodando");
 		while(true){
 			if(souCoordenador()){
-				System.out.println("executando controller");
 				rmiServer.run();
-				System.out.println("Chamei thread bancoServer()");	
 			}
-			System.out.println('.');
-			Thread.sleep(2000);
 		}
 
 	}
