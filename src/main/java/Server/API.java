@@ -1,3 +1,4 @@
+package Server;
 
 import java.rmi.*;
 import java.util.ArrayList;

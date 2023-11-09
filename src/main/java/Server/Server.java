@@ -1,19 +1,23 @@
+package Server;
 
+
+import java.io.IOException;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.ArrayList;
 
 import org.jgroups.JChannel;
 import org.jgroups.Message;
-import org.jgroups.ReceiverAdapter;
 
 import Controllers.AuthController;
 import Controllers.ContaController;
+import Controllers.RMIServerController;
 import Models.Transferencia;
 import Models.User;
 
 public class Server extends UnicastRemoteObject implements API {
 
+	static JChannel channel;
 	public static void main(String args[]) {
 
 		//Hook que invoca o desligamento do registry quando o programa é encerrado
@@ -26,30 +30,10 @@ public class Server extends UnicastRemoteObject implements API {
 
 		try {
 			
-			Server obj = new Server();
-			
-			try{
-				java.rmi.registry.LocateRegistry.getRegistry(1099);
-				System.out.println("Pegando serviço registry já criado");	
-				Naming.rebind("rmi://localhost/banco", obj);
-			}catch(Exception e){
-				System.out.println("Criando registry");
-				java.rmi.registry.LocateRegistry.createRegistry(1099);
-				Naming.bind("rmi://localhost/banco", obj);
-			}
-
-			 JChannel channel=new JChannel("protocolos.xml");
-  			 channel.setReceiver(new ReceiverAdapter() {
-				public void receive(Message msg) {
-					System.out.println("mensagem de " + msg.getSrc() + ": " + msg.getObject());
-				}
-			});
-
+			channel= new JChannel("protocolos.xml");
 			channel.connect("banco");
-			channel.send(new Message(null, "hello world"));
+				bancoServer();
 			channel.close();
-
-			System.out.println("Server ON.");
 
 		} catch (Exception erro) {
 			// DEBUG
@@ -88,5 +72,30 @@ public class Server extends UnicastRemoteObject implements API {
 		System.out.println(String.format("Usuário %s consultando extrato",user.getNome()));
 		return ContaController.obterExtrato(user);
 	}
+
+	private static void bancoServer() throws RemoteException, IOException, InterruptedException{
+
+		RMIServerController rmiServer = new RMIServerController();
+
+		System.out.println("Rodando");
+		while(true){
+			if(souCoordenador()){
+				System.out.println("executando controller");
+				rmiServer.run();
+				System.out.println("Chamei thread bancoServer()");	
+			}
+			System.out.println('.');
+			Thread.sleep(2000);
+		}
+
+	}
+
+	private static boolean souCoordenador(){
+        return ( channel.getAddress()
+                    .equals( 
+                 channel.getView().getMembers().get(0) 
+                           ) 
+        ); 
+    }
 
 }
