@@ -32,13 +32,10 @@ public class Client {
 	public static void realizarLookup(){
 		
 		try {
-			
 			String addr = null;
 			while(addr == null){
-				System.out.println("lookup");
 				addr = obterNomeServidor();
 				objetoRemoto = (API) Naming.lookup(addr);
-				System.out.println("lookup op");
 			}
 		} catch (Exception e) {
 			System.out.println("Houve um problema ao realizar o lookup: " + e.getMessage());
