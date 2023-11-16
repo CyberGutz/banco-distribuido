@@ -1,12 +1,15 @@
 package Server;
 
-import java.io.IOException;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.ArrayList;
 
 import org.jgroups.JChannel;
-import org.jgroups.Message;
+import org.jgroups.blocks.MethodCall;
+import org.jgroups.blocks.RequestOptions;
+import org.jgroups.blocks.ResponseMode;
+import org.jgroups.util.RspList;
+import org.jgroups.util.Util;
 
 import Controllers.AuthController;
 import Controllers.ClusterController;
@@ -18,7 +21,7 @@ import Models.User;
 public class Server extends UnicastRemoteObject implements API {
 
 	static JChannel channel;
-	static ClusterController cluster = new ClusterController(channel);
+	static ClusterController cluster;
 
 	public Server() throws RemoteException {
 		super(); // invoca o construtor do UnicastRemoteObject
@@ -36,9 +39,9 @@ public class Server extends UnicastRemoteObject implements API {
 		try {
 			// talvez usar buildind blocks como uma forma de abstração na comunicação entre
 			// os membros do cluster
-			channel = new JChannel("protocolos.xml").setReceiver(cluster).connect("banco");
-			bancoServer();
-			channel.close();
+			channel = new JChannel("protocolos.xml").connect("banco");
+				cluster = new ClusterController(channel);
+			channel.close(); 
 
 		} catch (Exception erro) {
 			// DEBUG
@@ -46,28 +49,6 @@ public class Server extends UnicastRemoteObject implements API {
 			erro.printStackTrace();
 		}
 
-	}
-
-	private static void bancoServer() throws Exception {
-
-		RMIServerController rmiServer = new RMIServerController();
-
-		if (souCoordenador()) {
-			rmiServer.start();
-		}else{
-			channel.getState(null,10000);
-		}
-
-		while (true) {
-
-		}
-
-	}
-
-	private static boolean souCoordenador() {
-		return (channel.getAddress()
-				.equals(
-						channel.getView().getMembers().get(0)));
 	}
 
 	// RPC - Operações ------------------------------------------------------------
@@ -83,7 +64,16 @@ public class Server extends UnicastRemoteObject implements API {
 
 	public User verSaldo(User user) throws RemoteException {
 		System.out.println(String.format("Usuário %s consultando seu saldo", user.getNome()));
-		return ContaController.verSaldo(user);
+		MethodCall metodo = new MethodCall("verSaldo",new Object[]{user},new Class[]{User.class});
+		RequestOptions opcoes = new RequestOptions(); 
+        	opcoes.setMode(ResponseMode.GET_FIRST); 
+		try {
+			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
+			user = rsp.getFirst();
+		} catch (Exception e) {
+			user.setErro(e.getMessage());
+		}
+		return user;
 	}
 
 	public User transferirDinheiro(User origem, User destino, double valor) throws RemoteException {

@@ -37,7 +37,7 @@ public class RMIServerController extends Thread {
                     
                     Server obj = new Server();
                     try{
-                    java.rmi.registry.LocateRegistry.getRegistry(1099);
+                        java.rmi.registry.LocateRegistry.getRegistry(1099);
                         System.out.println("Pegando serviço registry já criado");	
                         Naming.rebind("rmi://localhost/banco", obj);
                     }catch(Exception e){

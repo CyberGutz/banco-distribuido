@@ -11,7 +11,7 @@ import java.util.Scanner;
 import Models.Transferencia;
 import Models.User;
 import Server.API;
-import Server.Server;
+import org.jgroups.util.*;
 
 public class Client {
 
@@ -66,7 +66,7 @@ public class Client {
 
 				byte[] buffer = new byte[256];
 				DatagramPacket resposta = new DatagramPacket(buffer, buffer.length,addr,port);
-				socket.receive(resposta);
+				socket.receive(resposta); 
 	
 				String msg = new String(resposta.getData(), 0, resposta.getLength());
 
@@ -75,7 +75,7 @@ public class Client {
 					break;
 				}
 
-				Thread.sleep(1000);
+				Util.sleep(1000);
 			}
 			
 		} catch (Exception e) {

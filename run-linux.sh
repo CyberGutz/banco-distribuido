@@ -1,4 +1,5 @@
 #!/bin/bash
+#CONFIG="-Djgroups.bind_addr=172.16.2.222 -Djava.net.preferIPv4Stack=true"
 
 if [[ "$@" =~ "-h" ]]; then
     echo "-r ---- Reconstroi o projeto novamente com o maven"
