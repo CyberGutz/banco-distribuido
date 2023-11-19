@@ -28,18 +28,10 @@ public class Server extends UnicastRemoteObject implements API {
 	}
 	public static void main(String args[]) {
 
-		// Hook que invoca o desligamento do registry quando o programa é encerrado
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			try {
-				UnicastRemoteObject.unexportObject(java.rmi.registry.LocateRegistry.getRegistry(1099), true);
-			} catch (Exception e) {
-			}
-		}));
-
 		try {
 			// talvez usar buildind blocks como uma forma de abstração na comunicação entre
 			// os membros do cluster
-			channel = new JChannel("protocolos.xml").connect("banco");
+			channel = new JChannel("protocolos.xml");
 				cluster = new ClusterController(channel);
 			channel.close(); 
 
