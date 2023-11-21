@@ -11,8 +11,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.rmi.server.UnicastRemoteObject;
-import org.jgroups.Message;
+
+import java.util.ArrayList;
 import java.util.Random;
 
 import org.jgroups.Address;
@@ -23,6 +23,7 @@ import org.jgroups.blocks.RpcDispatcher;
 import org.jgroups.util.Util;
 
 import Models.State;
+import Models.Transferencia;
 import Models.User;
 
 public class ClusterController implements Receiver {
@@ -140,13 +141,34 @@ public class ClusterController implements Receiver {
     // ----------------------------------------------------------------------------
 
     // Métodos da Aplicação -----------
-    public User verSaldo(User user) {
-        System.out.println(this.channel.getAddress() + " retornando saldo");
-        return (new ContaController(this)).verSaldo(user);
+    public User criarConta(String usuario,String senha){
+        System.out.println(this.channel.getAddress() + " criando conta");
+        return AuthController.criarConta(usuario,senha);
     }
 
-    // -------------------------------------------------------------------------------
+    public User fazerLogin(String usuario,String senha){
+        System.out.println(this.channel.getAddress() + " fazendo login");
+        return AuthController.fazerLogin(usuario,senha);
+    }
 
+    public User verSaldo(User user){
+        System.out.println(this.channel.getAddress() + " retornando saldo");
+        // Fazer Retransmissão e rollback
+        return ContaController.verSaldo(user);
+    }
+    
+    public User transferirDinheiro(User origem,User destino,double valor){
+        System.out.println(this.channel.getAddress() + " transferindo dinheiro");
+        // Fazer Retransmissão e rollback
+        return origem;
+    }
+
+    public ArrayList<Transferencia> obterExtrato(User user){
+        System.out.println(this.channel.getAddress() + " estrato da conta");
+        return ContaController.obterExtrato(user);
+    }
+
+    // ----------------------------------------------------
     // Getters e Métodos Utilitarios --------
     public RpcDispatcher getDispatcher() {
         return this.dispatcher;
