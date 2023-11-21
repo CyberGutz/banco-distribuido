@@ -14,7 +14,7 @@ public class ContaController {
         this.cluster = cluster;
     }
 
-    public User verSaldo(User user){
+    public static User verSaldo(User user){
 
         if(user.getUserDB(true) == null){
             user.setErro("Erro ao consultar saldo");
