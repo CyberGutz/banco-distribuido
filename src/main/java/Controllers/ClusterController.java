@@ -1,4 +1,5 @@
 package Controllers;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
@@ -11,11 +12,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.rmi.server.UnicastRemoteObject;
+import org.jgroups.Message;
 import java.util.Random;
 
 import org.jgroups.Address;
 import org.jgroups.JChannel;
-import org.jgroups.Message;
 import org.jgroups.Receiver;
 import org.jgroups.View;
 import org.jgroups.blocks.RpcDispatcher;
@@ -28,84 +29,80 @@ public class ClusterController implements Receiver {
 
     private JChannel channel;
     private RpcDispatcher dispatcher;
-	static final int TAMANHO_MINIMO_CLUSTER = 1;
+    static final int TAMANHO_MINIMO_CLUSTER = 1;
     private RMIServerController rmiServer;
     private boolean eraCoordenador = false;
 
-
-    public ClusterController(JChannel channel){
+    public ClusterController(JChannel channel) {
         this.channel = channel;
         this.conectarNoCanal();
-        if(!this.souCoordenador()){
-            this.obterEstado();    
+        if (!this.souCoordenador()) {
+            this.obterEstado();
         }
-        //loop serviço principal
+        // loop serviço principal
         this.bancoServer();
     }
 
-	private void bancoServer() {
+    private void bancoServer() {
 
-		while(this.channel.getView().size() < TAMANHO_MINIMO_CLUSTER){
-			Util.sleep(1000);
-		}
+        while (this.channel.getView().size() < TAMANHO_MINIMO_CLUSTER) {
+            Util.sleep(1000);
+        }
 
-		if (souCoordenador()) {
+        if (souCoordenador()) {
             eraCoordenador = true;
             rmiServer = new RMIServerController();
-			rmiServer.start();
-		}
+            rmiServer.start();
+        }
 
-		while (true) {
+        while (true) {
 
-		}
+        }
 
-	}
+    }
 
-    //-- Métodos de Gerenciamento do Grupo
-    public void viewAccepted(View view){
-        System.out.println("View ");
-        if(souCoordenador()){
-            if(!this.eraCoordenador){
+    // -- Métodos de Gerenciamento do Grupo
+    public void viewAccepted(View view) {
+        if (souCoordenador()) {
+            if (!this.eraCoordenador) {
                 eraCoordenador = true;
                 rmiServer = new RMIServerController();
                 rmiServer.start();
                 System.out.println("Virei o novo coordenador");
             }
-        }else{ //geral vai pedir o novo estado pro coordenador
+        } else { // geral vai pedir o novo estado pro coordenador
             System.out.println("Composição mudou, vou pedir estado pro ademir.");
             eraCoordenador = false;
             this.obterEstado();
         }
     }
-    
+
     // public void receive(Message msg){
-        // System.out.println("Mensage braba: " + msg.getSrc());
+    // System.out.println("Mensage braba: " + msg.getSrc());
     // }
 
-    public void getState(OutputStream output){
+    public void getState(OutputStream output) {
 
         try {
-                State state = new State();
-                
-                File file = new File("users.json");
-                System.out.println("getState()" + file.getAbsolutePath());
-                
-                BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
-                
-                state.setUsers(bfis.readAllBytes());
-                bfis.close();
-                
-                file = new File("transferencias.json");
-                bfis = new BufferedInputStream(new FileInputStream(file));
-                
-                state.setTransferencias(bfis.readAllBytes());
-                bfis.close();
+            State state = new State();
 
-                //escreve na saída do pedinte do estado
-                Util.objectToStream(state, new DataOutputStream(output));
-                System.out.println("Estado enviado.");
-            } 
-        catch (FileNotFoundException e) {
+            File file = new File("users.json");
+            
+            BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
+
+            state.setUsers(bfis.readAllBytes());
+            bfis.close();
+
+            file = new File("transferencias.json");
+            bfis = new BufferedInputStream(new FileInputStream(file));
+
+            state.setTransferencias(bfis.readAllBytes());
+            bfis.close();
+
+            // escreve na saída do pedinte do estado
+            Util.objectToStream(state, new DataOutputStream(output));
+            System.out.println("Estado enviado.");
+        } catch (FileNotFoundException e) {
             System.out.println("Arquivo(s) não encontrado(s) ao transferir estado: " + e.getMessage());
             this.channel.disconnect();
             this.conectarNoCanal();
@@ -116,23 +113,22 @@ public class ClusterController implements Receiver {
     }
 
     public void setState(InputStream input) {
-       
+
         try {
-                State state = (State)Util.objectFromStream(new DataInputStream(input));
-                
-                BufferedOutputStream bfos = new BufferedOutputStream(new FileOutputStream(new File("users.json")));
+            State state = (State) Util.objectFromStream(new DataInputStream(input));
 
-                bfos.write(state.getUsers());
-                bfos.flush();
-                bfos.close();
+            BufferedOutputStream bfos = new BufferedOutputStream(new FileOutputStream(new File("users.json")));
 
-                bfos = new BufferedOutputStream(new FileOutputStream(new File("transferencias.json")));
-                bfos.write(state.getTransferencias());
-                bfos.flush();
-                bfos.close();
-                System.out.println("Leu o estado do coordenador: " + this.channel.view().getCoord());
-            } 
-        catch (IOException e) {
+            bfos.write(state.getUsers());
+            bfos.flush();
+            bfos.close();
+
+            bfos = new BufferedOutputStream(new FileOutputStream(new File("transferencias.json")));
+            bfos.write(state.getTransferencias());
+            bfos.flush();
+            bfos.close();
+            System.out.println("Leu o estado do coordenador: " + this.channel.view().getCoord());
+        } catch (IOException e) {
             System.out.println("Erro ao ler estado: " + e.getMessage());
             this.obterEstado();
         } catch (ClassNotFoundException e) {
@@ -140,70 +136,67 @@ public class ClusterController implements Receiver {
             this.obterEstado();
         }
 
-
     }
     // ----------------------------------------------------------------------------
 
     // Métodos da Aplicação -----------
-    public User verSaldo(User user){
+    public User verSaldo(User user) {
         System.out.println(this.channel.getAddress() + " retornando saldo");
-        return ContaController.verSaldo(user);
+        return (new ContaController(this)).verSaldo(user);
     }
 
+    // -------------------------------------------------------------------------------
 
-    //-------------------------------------------------------------------------------
-
-    //Getters e Métodos Utilitarios --------
-    public RpcDispatcher getDispatcher(){
+    // Getters e Métodos Utilitarios --------
+    public RpcDispatcher getDispatcher() {
         return this.dispatcher;
     }
 
-    public Address getRandomMember(){
+    public Address getRandomMember() {
         return this.channel.getView().getMembers().get(
-             (new Random()).nextInt(this.channel.getView().getMembers().size())
-            );
+                (new Random()).nextInt(this.channel.getView().getMembers().size()));
     }
 
     private boolean souCoordenador() {
-		return (this.channel.getAddress()
-				.equals(
-						this.channel.getView().getMembers().get(0)));
-	}
+        return (this.channel.getAddress()
+                .equals(
+                        this.channel.getView().getMembers().get(0)));
+    }
 
-    private void conectarNoCanal(){
+    private void conectarNoCanal() {
         boolean conectou = false;
         while (true) {
             try {
                 this.channel.connect("banco");
-                this.dispatcher = new RpcDispatcher(this.channel,this);
+                this.dispatcher = new RpcDispatcher(this.channel, this);
                 this.dispatcher.setReceiver(this);
-                conectou = true;   
+                conectou = true;
                 System.out.println("Conectado!");
             } catch (Exception e) {
-                //dá uma relaxa por 2 segundos e tenta denovo.
+                // dá uma relaxa por 2 segundos e tenta denovo.
                 System.out.println("Erro ao tentar conectar no canal: " + e.getMessage());
                 System.out.println("Tentando novamente...");
                 Util.sleep(2000);
             }
-            if(conectou){
+            if (conectou) {
                 break;
             }
         }
     }
 
-    private void obterEstado(){
+    private void obterEstado() {
         boolean obteuEstado = false;
         while (true) {
             try {
-                this.channel.getState(null,10000);
-                obteuEstado = true;   
+                this.channel.getState(null, 10000);
+                obteuEstado = true;
             } catch (Exception e) {
-                //dá uma relaxa por 2 segundos e tenta denovo.
+                // dá uma relaxa por 2 segundos e tenta denovo.
                 System.out.println("Erro ao tentar obter o estado: " + e.getMessage());
                 System.out.println("Tentando novamente...");
                 Util.sleep(2000);
             }
-            if(obteuEstado){
+            if (obteuEstado) {
                 break;
             }
         }

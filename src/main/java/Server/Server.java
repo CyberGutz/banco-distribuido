@@ -26,21 +26,8 @@ public class Server extends UnicastRemoteObject implements API {
 	public Server() throws RemoteException {
 		super(); // invoca o construtor do UnicastRemoteObject
 	}
-	public static void main(String args[]) {
-
-		try {
-			// talvez usar buildind blocks como uma forma de abstração na comunicação entre
-			// os membros do cluster
-			channel = new JChannel("protocolos.xml");
-				cluster = new ClusterController(channel);
-			channel.close(); 
-
-		} catch (Exception erro) {
-			// DEBUG
-			System.out.println("ERRO: Server " + erro.getMessage());
-			erro.printStackTrace();
-		}
-
+	public static void main(String args[]) throws Exception {
+		cluster = new ClusterController(new JChannel("protocolos.xml"));
 	}
 
 	// RPC - Operações ------------------------------------------------------------

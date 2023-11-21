@@ -1,6 +1,5 @@
 package Controllers;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -9,8 +8,13 @@ import Models.User;
 
 public class ContaController {
 
+    private ClusterController cluster;
 
-    public static User verSaldo(User user){
+    public ContaController(ClusterController cluster){
+        this.cluster = cluster;
+    }
+
+    public User verSaldo(User user){
 
         if(user.getUserDB(true) == null){
             user.setErro("Erro ao consultar saldo");
