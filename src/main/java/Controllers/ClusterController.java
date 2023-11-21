@@ -21,6 +21,8 @@ import org.jgroups.View;
 import org.jgroups.blocks.RpcDispatcher;
 import org.jgroups.util.Util;
 
+import Controllers.AuthController;
+import Controllers.ContaController;
 import Models.State;
 import Models.User;
 
@@ -31,7 +33,7 @@ public class ClusterController implements Receiver {
 	static final int TAMANHO_MINIMO_CLUSTER = 1;
     private RMIServerController rmiServer;
     private boolean eraCoordenador = false;
-
+    
 
     public ClusterController(JChannel channel){
         this.channel = channel;
@@ -145,11 +147,32 @@ public class ClusterController implements Receiver {
     // ----------------------------------------------------------------------------
 
     // Métodos da Aplicação -----------
+    public User criarConta(User user){
+        System.out.println(this.channel.getAddress() + " criando conta");
+        return AuthController.criarConta(user);
+    }
+
+    public User fazerLogin(User user){
+        System.out.println(this.channel.getAddress() + " fazendo login");
+        return AuthController.frazerLogin(user);
+    }
+
     public User verSaldo(User user){
         System.out.println(this.channel.getAddress() + " retornando saldo");
+        // Fazer Retransmissão e rollback
+        return ContaController.verSaldo(user);
+    }
+    
+    public User transferirDinheiro(User user){
+        System.out.println(this.channel.getAddress() + " transferindo dinheiro");
+        // Fazer Retransmissão e rollback
         return ContaController.verSaldo(user);
     }
 
+    public static ArrayList<Transferencia> obterExtrato(User user){
+        System.out.println(this.channel.getAddress() + " estrato da conta");
+        return ContaController.obterExtrato(user);
+    }
 
     //-------------------------------------------------------------------------------
 
