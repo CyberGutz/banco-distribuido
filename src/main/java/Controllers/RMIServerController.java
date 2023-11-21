@@ -62,7 +62,6 @@ public class RMIServerController extends Thread {
                     socket.send(pacote);
                 }
             }
-
         } catch (Exception e) {
             System.out.println("Erro rmiserver: " + e.getMessage());
         }

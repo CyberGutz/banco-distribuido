@@ -7,7 +7,7 @@ if($args -contains "-h"){
 }
 
 if (-not (Test-Path -Path "target" -PathType Container) -or $args -contains "-r"){
-    ./mvnw clean install
+    ./mvnw clean install -q
 }
 
 if ($args -contains "-c"){

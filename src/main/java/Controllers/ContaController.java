@@ -8,12 +8,7 @@ import Models.User;
 
 public class ContaController {
 
-    private ClusterController cluster;
-
-    public ContaController(ClusterController cluster){
-        this.cluster = cluster;
-    }
-
+    
     public static User verSaldo(User user){
 
         if(user.getUserDB(true) == null){

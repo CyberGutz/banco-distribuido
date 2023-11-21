@@ -39,19 +39,18 @@ public class ClusterController implements Receiver {
         this.conectarNoCanal();
         if (!this.souCoordenador()) {
             this.obterEstado();
+        }else{
+            eraCoordenador = true;
         }
-        // loop serviço principal
-        this.bancoServer();
     }
 
-    private void bancoServer() {
+    public void bancoServer() {
 
         while (this.channel.getView().size() < TAMANHO_MINIMO_CLUSTER) {
             Util.sleep(1000);
         }
 
         if (souCoordenador()) {
-            eraCoordenador = true;
             rmiServer = new RMIServerController();
             rmiServer.start();
         }
@@ -59,7 +58,6 @@ public class ClusterController implements Receiver {
         while (true) {
 
         }
-
     }
 
     // -- Métodos de Gerenciamento do Grupo
