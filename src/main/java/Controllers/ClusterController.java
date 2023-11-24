@@ -14,12 +14,14 @@ import java.io.OutputStream;
 
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.locks.Lock;
 
 import org.jgroups.Address;
 import org.jgroups.JChannel;
 import org.jgroups.Receiver;
 import org.jgroups.View;
 import org.jgroups.blocks.RpcDispatcher;
+import org.jgroups.blocks.locking.LockService;
 import org.jgroups.util.Util;
 
 import Models.State;
@@ -30,8 +32,11 @@ public class ClusterController implements Receiver {
 
     private JChannel channel;
     private RpcDispatcher dispatcher;
-    static final int TAMANHO_MINIMO_CLUSTER = 1;
+    private LockService mutex;
+
     private RMIServerController rmiServer;
+
+    static final int TAMANHO_MINIMO_CLUSTER = 1;
     private boolean eraCoordenador = false;
 
     public ClusterController(JChannel channel) {
@@ -157,7 +162,26 @@ public class ClusterController implements Receiver {
     
     public User transferirDinheiro(User origem,User destino,double valor){
         System.out.println(this.channel.getAddress() + " transferindo dinheiro");
-        // Fazer Retransmissão e rollback
+        
+
+        
+
+        // Lock trava = this.mutex.getLock("transferencia");
+
+        /*
+            try{
+                trava.lock(); 
+                // seção crítica
+            }
+            finally{
+                trava.unlock(); 
+            }
+        */
+
+        // if( trava.tryLock() && !meuApelido.contains("ADMIN") ){
+            // meuApelido += " [ADMIN]";
+        // }
+
         return origem;
     }
 
@@ -190,6 +214,7 @@ public class ClusterController implements Receiver {
                 this.channel.connect("banco");
                 this.dispatcher = new RpcDispatcher(this.channel, this);
                 this.dispatcher.setReceiver(this);
+                this.mutex = new LockService(this.channel);
                 conectou = true;
                 System.out.println("Conectado!");
             } catch (Exception e) {
