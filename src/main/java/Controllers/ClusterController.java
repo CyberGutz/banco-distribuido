@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Random;
 
 import org.jgroups.Address;
@@ -24,6 +25,7 @@ import org.jgroups.util.Util;
 import Controllers.AuthController;
 import Controllers.ContaController;
 import Models.State;
+import Models.Transferencia;
 import Models.User;
 
 public class ClusterController implements Receiver {
@@ -147,14 +149,14 @@ public class ClusterController implements Receiver {
     // ----------------------------------------------------------------------------
 
     // Métodos da Aplicação -----------
-    public User criarConta(User user){
+    public User criarConta(String usuario, String senha){
         System.out.println(this.channel.getAddress() + " criando conta");
-        return AuthController.criarConta(user);
+        return AuthController.criarConta(usuario, senha);
     }
 
-    public User fazerLogin(User user){
+    public User fazerLogin(String usuario, String senha){
         System.out.println(this.channel.getAddress() + " fazendo login");
-        return AuthController.frazerLogin(user);
+        return AuthController.fazerLogin(usuario, senha);
     }
 
     public User verSaldo(User user){
@@ -169,7 +171,7 @@ public class ClusterController implements Receiver {
         return ContaController.verSaldo(user);
     }
 
-    public static ArrayList<Transferencia> obterExtrato(User user){
+    public ArrayList<Transferencia> obterExtrato(User user){
         System.out.println(this.channel.getAddress() + " estrato da conta");
         return ContaController.obterExtrato(user);
     }
