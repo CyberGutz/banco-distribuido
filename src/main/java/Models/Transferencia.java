@@ -32,6 +32,12 @@ public class Transferencia implements java.io.Serializable {
         this.origem = origem;
     }
 
+    public Transferencia(User origem, User destino,double valor){
+        this.origem = origem;
+        this.destino = destino;
+        this.valor = valor;
+    }
+
     public void salvar() throws IOException {
         
         JSONArray jsonArray;

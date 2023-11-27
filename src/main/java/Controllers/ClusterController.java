@@ -160,33 +160,37 @@ public class ClusterController implements Receiver {
         return ContaController.verSaldo(user);
     }
     
-    public User transferirDinheiro(User origem,User destino,double valor){
+    public User transferirDinheiro(Transferencia transferencia){
         System.out.println(this.channel.getAddress() + " transferindo dinheiro");
         
+        User origem = transferencia.getUserOrigem();
+        User destino = transferencia.getUserDestino();
 
-        
+        int conta1 = origem.getConta(),conta2 = destino.getConta();
 
-        // Lock trava = this.mutex.getLock("transferencia");
+        if(conta2 < conta1){ //troca as contas de ordem pra criar a mutex da forma correta
+            int aux = conta1;
+            conta1 = conta2;
+            conta2 = aux;
+        }
+        System.out.println(String.format("Mutex [%d%d]", conta1,conta2));
 
-        /*
-            try{
-                trava.lock(); 
-                // seção crítica
-            }
-            finally{
-                trava.unlock(); 
-            }
-        */
-
-        // if( trava.tryLock() && !meuApelido.contains("ADMIN") ){
-            // meuApelido += " [ADMIN]";
-        // }
-
+        Lock trava = this.mutex.getLock(String.format("%d%d", conta1,conta2));
+        try{
+            System.out.println("Adquirindo seção crítica..");
+            trava.lock(); 
+            System.out.println("Adquirido, transferindo...");
+            origem = ContaController.transferirDinheiro(transferencia);
+        }
+        finally{
+            System.out.println("Devolvendo trava");
+            trava.unlock(); 
+        }
         return origem;
     }
 
     public ArrayList<Transferencia> obterExtrato(User user){
-        System.out.println(this.channel.getAddress() + " estrato da conta");
+        System.out.println(this.channel.getAddress() + " extrato da conta");
         return ContaController.obterExtrato(user);
     }
 
@@ -196,6 +200,10 @@ public class ClusterController implements Receiver {
         return this.dispatcher;
     }
 
+    public JChannel getChannel() {
+        return channel;
+    }
+    
     public Address getRandomMember() {
         return this.channel.getView().getMembers().get(
                 (new Random()).nextInt(this.channel.getView().getMembers().size()));
@@ -211,7 +219,7 @@ public class ClusterController implements Receiver {
         boolean conectou = false;
         while (true) {
             try {
-                this.channel.connect("banco");
+                this.channel = this.channel.connect("banco");
                 this.dispatcher = new RpcDispatcher(this.channel, this);
                 this.dispatcher.setReceiver(this);
                 this.mutex = new LockService(this.channel);

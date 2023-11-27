@@ -41,6 +41,7 @@ public class Server extends UnicastRemoteObject implements API {
 	}
 
 	public User verSaldo(User user) throws RemoteException {
+		System.out.println("---------------------------------------");
 		System.out.println(String.format("Usuário %s consultando seu saldo", user.getNome()));
 		MethodCall metodo = new MethodCall("verSaldo",new Object[]{user},new Class[]{User.class});
 		RequestOptions opcoes = new RequestOptions(); 
@@ -52,24 +53,40 @@ public class Server extends UnicastRemoteObject implements API {
 			System.out.println("Erro ao enviar saldo: " + e.getMessage());
 			user.setErro(e.getMessage());
 		}
+		System.out.println("---------------------------------------");
 		return user;
 	}
 
 	public User transferirDinheiro(User origem, User destino, double valor) throws RemoteException {
+		System.out.println("---------------------------------------");
 		System.out.println(
-				String.format("Usuário %s transferindo R$%.2f pro %s", origem.getNome(), valor, destino.getNome()));
-		MethodCall metodo = new MethodCall("transferirDinheiro",new Object[]{origem,destino,valor},new Class[]{User.class,User.class,Double.class});
-		RequestOptions opcoes = new RequestOptions(); 
-        	opcoes.setMode(ResponseMode.GET_ALL); 
+			String.format("Usuário %s transferindo R$%.2f pro %s", origem.getNome(), valor, destino.getNome()));
+			Transferencia transferencia = new Transferencia(origem,destino,valor);
+			MethodCall metodo = new MethodCall("transferirDinheiro",new Object[]{transferencia},new Class[]{Transferencia.class});
 		try {
-			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
+			System.out.println("Enviando mensagem pra geral");
+			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, new RequestOptions(ResponseMode.GET_ALL,2000));
+			int erros = 0;
+			int semErros = 0;
 			System.out.println(rsp);
+			for(User user: rsp.getResults()){
+				if(user.getErro() !=  null){
+					erros++;
+				}else{
+					semErros++;
+				}
+			}
+			
+			System.out.println(String.format("%d com erros, %d sem erro",erros,semErros));
+			
 		} catch (Exception e) {
+			System.out.println("Erro na transferencia: " + e.getMessage());
 			origem.setErro(e.getMessage());
 		}
+		System.out.println("---------------------------------------");
 		return origem;
 	}
-
+	
 	public ArrayList<Transferencia> obterExtrato(User user) throws RemoteException {
 		System.out.println(String.format("Usuário %s consultando extrato", user.getNome()));
 		return ContaController.obterExtrato(user);
