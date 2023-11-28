@@ -38,13 +38,13 @@ public class Transferencia implements java.io.Serializable {
         this.valor = valor;
     }
 
-    public void salvar() throws IOException {
+    public void salvar() {
         
         JSONArray jsonArray;
         
         try (FileReader fileReader = new FileReader("transferencias.json")) {
             jsonArray = new JSONArray(new JSONTokener(fileReader));
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             jsonArray = new JSONArray();
         }
 

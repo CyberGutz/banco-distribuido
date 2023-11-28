@@ -42,9 +42,7 @@ public class ClusterController implements Receiver {
     public ClusterController(JChannel channel) {
         this.channel = channel;
         this.conectarNoCanal();
-        if (!this.souCoordenador()) {
-            this.obterEstado();
-        }else{
+        if (this.souCoordenador()) {
             eraCoordenador = true;
         }
     }
@@ -88,23 +86,8 @@ public class ClusterController implements Receiver {
     public void getState(OutputStream output) {
 
         try {
-            State state = new State();
-
-            File file = new File("users.json");
-            
-            BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
-
-            state.setUsers(bfis.readAllBytes());
-            bfis.close();
-
-            file = new File("transferencias.json");
-            bfis = new BufferedInputStream(new FileInputStream(file));
-
-            state.setTransferencias(bfis.readAllBytes());
-            bfis.close();
-
             // escreve na saída do pedinte do estado
-            Util.objectToStream(state, new DataOutputStream(output));
+            Util.objectToStream(new State(), new DataOutputStream(output));
             System.out.println("Estado enviado.");
         } catch (FileNotFoundException e) {
             System.out.println("Arquivo(s) não encontrado(s) ao transferir estado: " + e.getMessage());
@@ -144,52 +127,84 @@ public class ClusterController implements Receiver {
     // ----------------------------------------------------------------------------
 
     // Métodos da Aplicação -----------
-    public User criarConta(String usuario,String senha){
+    public User criarConta(String usuario, String senha) {
         System.out.println(this.channel.getAddress() + " criando conta");
-        return AuthController.criarConta(usuario,senha);
+        return AuthController.criarConta(usuario, senha);
     }
 
-    public User fazerLogin(String usuario,String senha){
+    public User fazerLogin(String usuario, String senha) {
         System.out.println(this.channel.getAddress() + " fazendo login");
-        return AuthController.fazerLogin(usuario,senha);
+        return AuthController.fazerLogin(usuario, senha);
     }
 
-    public User verSaldo(User user){
+    public User verSaldo(User user) {
         System.out.println(this.channel.getAddress() + " retornando saldo");
-        // Fazer Retransmissão e rollback
-        return ContaController.verSaldo(user);
+        Lock trava = this.mutex.getLock(String.format("%d", user.getConta()));
+        try {
+            System.out.println("Adquirindo seção crítica..");
+            trava.lock();
+            System.out.println("Adquirido, vendo saldo...");
+            user = ContaController.verSaldo(user);
+        } 
+        catch(Exception e){
+            user.setErro(e.getMessage());
+        }finally {
+            System.out.println("Devolvendo trava");
+            trava.unlock();
+        }
+        return user;
     }
-    
-    public User transferirDinheiro(Transferencia transferencia){
+
+    public void rollback(State estado){
+
+        try {  
+            System.out.println("Rollback...");
+            BufferedOutputStream bfos = new BufferedOutputStream(new FileOutputStream(new File("users.json")));
+            bfos.write(estado.getUsers());
+            bfos.flush();
+            bfos.close();
+
+            bfos = new BufferedOutputStream(new FileOutputStream(new File("transferencias.json")));
+            bfos.write(estado.getTransferencias());
+            bfos.flush();
+            bfos.close();
+        } catch (Exception e) {//se der qualquer erro na hora de transferir o estado, some do canal.
+            this.channel.disconnect();
+            this.conectarNoCanal();
+        } 
+    }
+
+    public User transferirDinheiro(Transferencia transferencia) {
         System.out.println(this.channel.getAddress() + " transferindo dinheiro");
-        
+
         User origem = transferencia.getUserOrigem();
         User destino = transferencia.getUserDestino();
 
-        int conta1 = origem.getConta(),conta2 = destino.getConta();
+        System.out.println(String.format("Mutex [%d-%d]", origem.getConta(), destino.getConta()));
 
-        if(conta2 < conta1){ //troca as contas de ordem pra criar a mutex da forma correta
-            int aux = conta1;
-            conta1 = conta2;
-            conta2 = aux;
-        }
-        System.out.println(String.format("Mutex [%d%d]", conta1,conta2));
-
-        Lock trava = this.mutex.getLock(String.format("%d%d", conta1,conta2));
-        try{
+        Lock travaC1 = this.mutex.getLock(String.format("%d", origem.getConta()));
+        Lock travaC2 = this.mutex.getLock(String.format("%d", destino.getConta()));
+        try {
             System.out.println("Adquirindo seção crítica..");
-            trava.lock(); 
+            travaC1.lock();
+            travaC2.lock();
             System.out.println("Adquirido, transferindo...");
             origem = ContaController.transferirDinheiro(transferencia);
-        }
-        finally{
+        } catch(Exception e){
+            //sai do canal e se reconecta
+            System.out.println("Erro na transferência: " + e.getMessage());
+            System.out.println("Saindo do canal..");
+            this.channel.disconnect();
+            this.conectarNoCanal();
+        }finally {
             System.out.println("Devolvendo trava");
-            trava.unlock(); 
+            travaC1.unlock();
+            travaC2.unlock();
         }
         return origem;
     }
 
-    public ArrayList<Transferencia> obterExtrato(User user){
+    public ArrayList<Transferencia> obterExtrato(User user) {
         System.out.println(this.channel.getAddress() + " extrato da conta");
         return ContaController.obterExtrato(user);
     }
@@ -203,7 +218,7 @@ public class ClusterController implements Receiver {
     public JChannel getChannel() {
         return channel;
     }
-    
+
     public Address getRandomMember() {
         return this.channel.getView().getMembers().get(
                 (new Random()).nextInt(this.channel.getView().getMembers().size()));
@@ -225,6 +240,9 @@ public class ClusterController implements Receiver {
                 this.mutex = new LockService(this.channel);
                 conectou = true;
                 System.out.println("Conectado!");
+                if(!this.souCoordenador()){
+                    this.obterEstado();
+                }
             } catch (Exception e) {
                 // dá uma relaxa por 2 segundos e tenta denovo.
                 System.out.println("Erro ao tentar conectar no canal: " + e.getMessage());

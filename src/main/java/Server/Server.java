@@ -3,16 +3,20 @@ package Server;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.ArrayList;
+import java.util.Map.Entry;
 
+import org.jgroups.Address;
 import org.jgroups.JChannel;
 import org.jgroups.blocks.MethodCall;
 import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.ResponseMode;
+import org.jgroups.util.Rsp;
 import org.jgroups.util.RspList;
 
 import Controllers.AuthController;
 import Controllers.ClusterController;
 import Controllers.ContaController;
+import Models.State;
 import Models.Transferencia;
 import Models.User;
 
@@ -23,10 +27,11 @@ public class Server extends UnicastRemoteObject implements API {
 	public Server() throws RemoteException {
 		super(); // invoca o construtor do UnicastRemoteObject
 	}
+
 	public static void main(String args[]) throws Exception {
 		cluster = new ClusterController(new JChannel("protocolos.xml"));
-		//rodando o serviço
-		cluster.bancoServer();	
+		// rodando o serviço
+		cluster.bancoServer();
 	}
 
 	// RPC - Operações ------------------------------------------------------------
@@ -43,9 +48,9 @@ public class Server extends UnicastRemoteObject implements API {
 	public User verSaldo(User user) throws RemoteException {
 		System.out.println("---------------------------------------");
 		System.out.println(String.format("Usuário %s consultando seu saldo", user.getNome()));
-		MethodCall metodo = new MethodCall("verSaldo",new Object[]{user},new Class[]{User.class});
-		RequestOptions opcoes = new RequestOptions(); 
-        	opcoes.setMode(ResponseMode.GET_FIRST); 
+		MethodCall metodo = new MethodCall("verSaldo", new Object[] { user }, new Class[] { User.class });
+		RequestOptions opcoes = new RequestOptions();
+		opcoes.setMode(ResponseMode.GET_FIRST);
 		try {
 			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
 			user = rsp.getFirst();
@@ -60,25 +65,47 @@ public class Server extends UnicastRemoteObject implements API {
 	public User transferirDinheiro(User origem, User destino, double valor) throws RemoteException {
 		System.out.println("---------------------------------------");
 		System.out.println(
-			String.format("Usuário %s transferindo R$%.2f pro %s", origem.getNome(), valor, destino.getNome()));
-			Transferencia transferencia = new Transferencia(origem,destino,valor);
-			MethodCall metodo = new MethodCall("transferirDinheiro",new Object[]{transferencia},new Class[]{Transferencia.class});
+				String.format("Usuário %s transferindo R$%.2f pro %s", origem.getNome(), valor, destino.getNome()));
 		try {
+			State estadoAtual = new State(); // fazendo um backup do estado atual
+			Transferencia transferencia = new Transferencia(origem, destino, valor);
+			MethodCall metodo = new MethodCall("transferirDinheiro", new Object[] { transferencia },
+					new Class[] { Transferencia.class });
 			System.out.println("Enviando mensagem pra geral");
-			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, new RequestOptions(ResponseMode.GET_ALL,2000));
+			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo,
+					new RequestOptions(ResponseMode.GET_ALL, 2000));
+			ArrayList<Address> membrosSemErros = new ArrayList<Address>();
 			int erros = 0;
 			int semErros = 0;
 			System.out.println(rsp);
-			for(User user: rsp.getResults()){
-				if(user.getErro() !=  null){
+			for (Entry<Address, Rsp<User>> user : rsp.entrySet()) { //iterando as respostas dos membros
+				if (user.getValue().getValue().getErro() != null) {
+					System.out.println("Erro " + user.getKey() + ": " + user.getValue().getValue().getErro());
+					if(user.getKey() == cluster.getChannel().getAddress()){ //o coordenador deu erro
+						cluster.rollback(estadoAtual);
+					}
 					erros++;
-				}else{
+				} else {
+					System.out.println("Sem erro " + user.getKey());
+					membrosSemErros.add(user.getKey());
 					semErros++;
 				}
 			}
-			
-			System.out.println(String.format("%d com erros, %d sem erro",erros,semErros));
-			
+			System.out.println(String.format("%d com erros, %d sem erro", erros, semErros));
+
+			if (erros > 0) {
+				if (erros > semErros && semErros > 0) { // a maioria deu erro e tem que ter alguem sem erro pra reverter
+					// reverte
+					System.out.println("Revertendo transferência...");
+					cluster.getDispatcher().callRemoteMethods(membrosSemErros,
+						"rollback",
+						new Object[]{estadoAtual},
+						new Class[]{State.class}, 
+						new RequestOptions(ResponseMode.GET_NONE,2000));
+					throw new Exception("Serviço indisponível,tente novamente mais tarde!");
+				}
+			}
+
 		} catch (Exception e) {
 			System.out.println("Erro na transferencia: " + e.getMessage());
 			origem.setErro(e.getMessage());
@@ -86,7 +113,7 @@ public class Server extends UnicastRemoteObject implements API {
 		System.out.println("---------------------------------------");
 		return origem;
 	}
-	
+
 	public ArrayList<Transferencia> obterExtrato(User user) throws RemoteException {
 		System.out.println(String.format("Usuário %s consultando extrato", user.getNome()));
 		return ContaController.obterExtrato(user);
