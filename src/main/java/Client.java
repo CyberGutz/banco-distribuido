@@ -258,9 +258,9 @@ public class Client {
 				System.out.println("Entrada inválida ! Tente novamente");
 			} catch (Exception e) {
 				op = -1;
-				scanner.nextLine();
+				// scanner.nextLine();
 				System.out.println(e.getMessage());
-				e.printStackTrace();
+				// e.printStackTrace();
 			}
 
 		}

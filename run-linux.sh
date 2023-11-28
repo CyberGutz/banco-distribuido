@@ -11,17 +11,17 @@ fi
 
 if [[ ! -d "./target" || "$1" == "-r" ]]; #Verifica se existe a pasta target ou se o usuario passou uma flag de rebuild para buildar o projeto
   then
-    mvn clean install
+    ./mvnw clean install
 fi
 
 if [[ "$@" =~ "-s" ]];
     then
-    xterm -hold -e java -jar target/server.jar &
+    xterm -hold -e ./mvnw exec:java -q -Dexec.mainClass="Server.Server" &
 elif [[ "$@" =~ "-c" ]];
     then
-    xterm -hold -e java -jar target/cliente.jar &
+    xterm -hold -e ./mvnw exec:java -q -Dexec.mainClass="Client" &
 else
-    xterm -hold -e java -jar target/server.jar &
+    xterm -hold -e ./mvnw exec:java -q -Dexec.mainClass="Server.Server" &
     sleep 2
-    xterm -hold -e java -jar target/cliente.jar &
+    xterm -hold -e ./mvnw exec:java -q -Dexec.mainClass="Client" &
 fi

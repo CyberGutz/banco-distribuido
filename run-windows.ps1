@@ -7,15 +7,15 @@ if($args -contains "-h"){
 }
 
 if (-not (Test-Path -Path "target" -PathType Container) -or $args -contains "-r"){
-    mvn clean install
+    ./mvnw clean install -q
 }
 
 if ($args -contains "-c"){
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/k java -jar target/cliente.jar"
+    Start-Process -FilePath "cmd.exe" -ArgumentList '/k mvnw exec:java -q -D"exec.mainClass"="Client"'
 } elseif ($args -contains "-s"){
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/k java -jar target/server.jar"
+    Start-Process -FilePath "cmd.exe" -ArgumentList '/k mvnw exec:java -q -D"exec.mainClass"="Server.Server"'
 } else {
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/k java -jar target/server.jar"
+    Start-Process -FilePath "cmd.exe" -ArgumentList '/k mvnw exec:java -q -D"exec.mainClass"="Server.Server"'
     Start-Sleep 2
-    Start-Process -FilePath "cmd.exe" -ArgumentList "/k java -jar target/cliente.jar"
+    Start-Process -FilePath "cmd.exe" -ArgumentList '/k mvnw exec:java -q -D"exec.mainClass"="Client"'
 }

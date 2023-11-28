@@ -1,6 +1,5 @@
 package Controllers;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
@@ -9,7 +8,7 @@ import Models.User;
 
 public class ContaController {
 
-
+    
     public static User verSaldo(User user){
 
         if(user.getUserDB(true) == null){
@@ -18,7 +17,10 @@ public class ContaController {
         return user;
     }
 
-    public static User transferirDinheiro(User origem,User destino,double valor){
+    public static User transferirDinheiro(Transferencia transferencia){
+        User origem = transferencia.getUserOrigem();
+        User destino = transferencia.getUserDestino();
+        double valor =  transferencia.getValor();
         try {
             
             origem.setCreditos(origem.getCreditos() - valor);
@@ -29,8 +31,9 @@ public class ContaController {
             destino.salvar();
             if(destino.getErro() != null) throw new Exception(destino.getErro());
 
-            Transferencia transf = new Transferencia(origem,destino,valor,Calendar.getInstance().getTime());
-            transf.salvar();
+            transferencia.setData(Calendar.getInstance().getTime());
+            transferencia.salvar();
+            
         } catch (Exception e) {
            origem.setErro("Erro ao realizar transferência: " + e.getMessage());;
         }
