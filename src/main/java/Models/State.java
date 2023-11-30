@@ -4,21 +4,20 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
-import org.json.JSONArray;
-import org.json.JSONTokener;
 
 public class State implements java.io.Serializable {
 
     private byte[] users;
     private byte[] transferencias;
+    private int versao;
 
     public State() throws FileNotFoundException, IOException {
+        
+        this.versao = consultarVersao();
+    
         File file = new File("users.json");
 
         BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
@@ -33,20 +32,20 @@ public class State implements java.io.Serializable {
         bfis.close();
     }
 
-    public static void atualizarVersao() throws Exception{
+    public static int consultarVersao(){
         int versao;
         try {
             versao = Integer.parseInt(new String(Files.readAllBytes(Paths.get("versao.txt"))));
-            System.out.println("catou a versão");
         } catch (Exception e) { //primeira versao
-            System.out.println("nao catou a versao");
             versao = 1;
         }
-        System.out.println("versao:" + versao);
+        return versao;
+    }
+
+    public static void atualizarVersao() throws Exception{
+        int versao = consultarVersao();
         versao++;
-        System.out.println("versao nova :" + versao);
         Files.write(Paths.get("versao.txt"), String.valueOf(versao).getBytes());
-        System.out.println("Versão atualizada");
     }
 
     public byte[] getUsers() {
@@ -63,5 +62,9 @@ public class State implements java.io.Serializable {
 
     public void setTransferencias(byte[] transferencias) {
         this.transferencias = transferencias;
+    }
+
+    public int getVersao() {
+        return versao;
     }
 }

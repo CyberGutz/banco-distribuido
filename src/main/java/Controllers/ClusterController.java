@@ -11,17 +11,23 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Map.Entry;
 import java.util.concurrent.locks.Lock;
 
 import org.jgroups.Address;
 import org.jgroups.JChannel;
 import org.jgroups.Receiver;
 import org.jgroups.View;
+import org.jgroups.blocks.RequestOptions;
+import org.jgroups.blocks.ResponseMode;
 import org.jgroups.blocks.RpcDispatcher;
 import org.jgroups.blocks.locking.LockService;
+import org.jgroups.util.Rsp;
+import org.jgroups.util.RspList;
 import org.jgroups.util.Util;
 
 import Models.State;
@@ -113,6 +119,9 @@ public class ClusterController implements Receiver {
             bfos.write(state.getTransferencias());
             bfos.flush();
             bfos.close();
+
+            Files.write(Paths.get("versao.txt"), String.valueOf(state.getVersao()).getBytes());
+
             System.out.println("Leu o estado do coordenador: " + this.channel.view().getCoord());
         } catch (IOException e) {
             System.out.println("Erro ao ler estado: " + e.getMessage());
@@ -226,6 +235,10 @@ public class ClusterController implements Receiver {
         return ContaController.obterExtrato(user);
     }
 
+    public int consultarVersao() {
+        return State.consultarVersao();
+    }
+
     // ----------------------------------------------------
     // Getters e Métodos Utilitarios --------
     public RpcDispatcher getDispatcher() {
@@ -276,7 +289,20 @@ public class ClusterController implements Receiver {
         boolean obteuEstado = false;
         while (true) {
             try {
-                this.channel.getState(null, 10000);
+                //vendo quem tem o estado mais recente
+                RspList<Integer> rsp = this.dispatcher.callRemoteMethods(null, "consultarVersao", null, null, new RequestOptions(ResponseMode.GET_ALL,2000));
+                int maiorVersao = 0;
+                Address maiorAddr = null;
+                for(Entry<Address,Rsp<Integer>> versao: rsp.entrySet()){
+                    if(versao.getValue().wasReceived()){
+                        if(versao.getValue().getValue() > maiorVersao){
+                            maiorVersao = versao.getValue().getValue();
+                            maiorAddr = versao.getKey(); 
+                        }
+                    }
+                }
+                System.out.println("Quem tem a versão mais recente: " + maiorAddr + "Versão " + maiorVersao);
+                this.channel.getState(maiorAddr, 10000);
                 obteuEstado = true;
             } catch (Exception e) {
                 // dá uma relaxa por 2 segundos e tenta denovo.
