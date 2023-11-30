@@ -195,4 +195,15 @@ public class Server extends UnicastRemoteObject implements API {
 		return ContaController.obterExtrato(user);
 	}
 
+	public int consultarMontante(){
+		try {
+			State estadoAtual = new State();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+
+
+		return 0;
+	}
+
 }

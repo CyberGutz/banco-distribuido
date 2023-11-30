@@ -227,6 +227,17 @@ public class ClusterController implements Receiver {
         return ContaController.obterExtrato(user);
     }
 
+    public int obterMontante(){
+        File file = new File("users.json");
+        try {
+            BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
     // ----------------------------------------------------
     // Getters e Métodos Utilitarios --------
     public RpcDispatcher getDispatcher() {
