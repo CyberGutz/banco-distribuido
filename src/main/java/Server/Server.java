@@ -47,7 +47,20 @@ public class Server extends UnicastRemoteObject implements API {
 
 	public User consultarConta(User conta) throws RemoteException {
 		try {
-			
+			MethodCall metodo = new MethodCall("consultarConta", new Object[] {conta},
+					new Class[] { User.class });
+			System.out.println("Consultando conta pra geral");
+			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo,
+					new RequestOptions(ResponseMode.GET_ALL, 2000));
+			for (Entry<Address, Rsp<User>> user : rsp.entrySet()) { //iterando as respostas dos membros
+				if(user.getValue().wasReceived()){
+					if(user.getValue().getValue().getErro() == null){ //algum membro nao tem a conta consultada 
+						conta = user.getValue().getValue();
+					}else{
+						return null;
+					}
+				} 
+			}
 		} catch (Exception e) {
 			return null;
 		}

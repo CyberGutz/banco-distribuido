@@ -55,7 +55,7 @@ public class User implements java.io.Serializable {
                 }
             }
         } catch (JSONException e) {
-            this.setErro("Erro ao checar verificacao de existencia user:" + e.getMessage());
+            this.setErro("Erro ao checar verificacao de existencia da conta:" + e.getMessage());
         } catch (FileNotFoundException e) {
             return null;
         }

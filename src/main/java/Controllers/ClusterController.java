@@ -141,6 +141,13 @@ public class ClusterController implements Receiver {
         return AuthController.fazerLogin(usuario, senha);
     }
 
+    public User consultarConta(User conta){
+        if(conta.getUserDB(true) == null){
+            conta = null;
+        }
+        return conta;
+    }
+
     public User verSaldo(User user) {
         System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " retornando saldo");
