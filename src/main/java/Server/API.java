@@ -11,7 +11,9 @@ public interface API extends Remote {
 	User criarConta(String usuario,String senha) throws RemoteException;
 
 	User fazerLogin(String usuario,String senha) throws RemoteException;
-
+	
+	User consultarConta(User conta) throws RemoteException;
+	
 	User verSaldo(User user) throws RemoteException;
 	
 	User transferirDinheiro(User origem,User destino,double valor) throws RemoteException;

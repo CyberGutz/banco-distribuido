@@ -215,11 +215,7 @@ public class User implements java.io.Serializable {
     }
 
     public void setErro(String erro) {
-        if (this.erro != null || this.erro != "") {
-            this.erro = erro + "|" + this.erro;
-        } else {
-            this.erro = erro;
-        }
+        this.erro = erro;
     }
 
 }

@@ -55,16 +55,18 @@ public class RMIServerController extends Thread {
 
             while (true) { //loop eterno que aguarda mensagem dos clientes pedindo o stub
 
-                System.out.println("Aguardando receber pedido de stub");
+                // System.out.println("Aguardando receber pedido de stub");
                 byte[] buffer = new byte[256];
                 DatagramPacket pacote = new DatagramPacket(buffer, buffer.length, addr, port);
                 socket.receive(pacote);
 
                 String msg = new String(pacote.getData(), 0, pacote.getLength());
+                System.out.println("---------------------------------------");
                 System.out.println("Mensagem recebida: " + msg);
 
                 if (msg.equals("rmiclient")) {
                     System.out.println("Retornando stub: " + rmiAddr);
+                    System.out.println("---------------------------------------");
                     socket.send(stub);
                 }
             }
@@ -81,13 +83,13 @@ public class RMIServerController extends Thread {
             NetworkInterface iface = ifaces.nextElement();
             if (iface.getName().equals("eno1") || iface.getName().contains("eth")) {
                 //procurando a interface ethernet POSSIVELMENTE adequeada
-                System.out.println(iface.getName() + ":");
+                // System.out.println(iface.getName() + ":");
                 for (Enumeration<InetAddress> addresses = iface.getInetAddresses(); addresses.hasMoreElements();) {
                     InetAddress address = addresses.nextElement();
                     if (address instanceof Inet6Address) //nao quero ipv6
                         continue;
                     ip = address.getHostAddress();
-                    System.out.println(" " + ip);
+                    // System.out.println(" " + ip);
                 }
             }
         }

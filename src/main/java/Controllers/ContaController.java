@@ -23,6 +23,11 @@ public class ContaController {
         double valor =  transferencia.getValor();
         try {
             
+            if(origem.getCreditos() - valor < 0.0 || origem.getCreditos() == 0.0){ //nao tem dinheiro suficiente pra transferencia
+                System.out.println(origem.getNome() + " com saldo insuficiente");
+                throw new Exception("Saldo insuficiente");
+            }
+
             origem.setCreditos(origem.getCreditos() - valor);
             origem.salvar();
             if(origem.getErro() != null) throw new Exception(origem.getErro());
@@ -35,7 +40,7 @@ public class ContaController {
             transferencia.salvar();
             
         } catch (Exception e) {
-           origem.setErro("Erro ao realizar transferência: " + e.getMessage());;
+           origem.setErro("Erro ao realizar transferência: " + e.getMessage());
         }
         return origem;
     }

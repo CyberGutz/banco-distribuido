@@ -45,6 +45,15 @@ public class Server extends UnicastRemoteObject implements API {
 		return AuthController.fazerLogin(usuario, senha);
 	}
 
+	public User consultarConta(User conta) throws RemoteException {
+		try {
+			
+		} catch (Exception e) {
+			return null;
+		}
+		return conta;
+	}
+	
 	public User verSaldo(User user) throws RemoteException {
 		System.out.println("---------------------------------------");
 		System.out.println(String.format("Usuário %s consultando seu saldo", user.getNome()));
@@ -77,16 +86,19 @@ public class Server extends UnicastRemoteObject implements API {
 			ArrayList<Address> membrosSemErros = new ArrayList<Address>();
 			int erros = 0;
 			int semErros = 0;
+			String msg = "";
 			System.out.println(rsp);
+
 			for (Entry<Address, Rsp<User>> user : rsp.entrySet()) { //iterando as respostas dos membros
-				if (user.getValue().getValue().getErro() != null) {
+				if(!user.getValue().wasReceived()){
+					System.out.println("Membro não recebeu: " + user.getKey());
+					erros++;
+				}else if(user.getValue().getValue().getErro() != null){ //membro recebeu mas deu erro 
 					System.out.println("Erro " + user.getKey() + ": " + user.getValue().getValue().getErro());
-					if(user.getKey() == cluster.getChannel().getAddress()){ //o coordenador deu erro
-						cluster.rollback(estadoAtual);
-					}
+					msg = user.getValue().getValue().getErro();
 					erros++;
 				} else {
-					System.out.println("Sem erro " + user.getKey());
+					System.out.println("Sem erro: " + user.getKey());
 					membrosSemErros.add(user.getKey());
 					semErros++;
 				}
@@ -94,6 +106,10 @@ public class Server extends UnicastRemoteObject implements API {
 			System.out.println(String.format("%d com erros, %d sem erro", erros, semErros));
 
 			if (erros > 0) {
+				//todos deram erro
+				if(erros == rsp.size()){
+					throw new Exception(msg);
+				}
 				if (erros > semErros && semErros > 0) { // a maioria deu erro e tem que ter alguem sem erro pra reverter
 					// reverte
 					System.out.println("Revertendo transferência...");
@@ -107,7 +123,7 @@ public class Server extends UnicastRemoteObject implements API {
 			}
 
 		} catch (Exception e) {
-			System.out.println("Erro na transferencia: " + e.getMessage());
+			System.out.println(e.getMessage());
 			origem.setErro(e.getMessage());
 		}
 		System.out.println("---------------------------------------");

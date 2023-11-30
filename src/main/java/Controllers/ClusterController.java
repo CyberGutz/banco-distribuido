@@ -128,16 +128,21 @@ public class ClusterController implements Receiver {
 
     // Métodos da Aplicação -----------
     public User criarConta(String usuario, String senha) {
+        System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " criando conta");
+		System.out.println("---------------------------------------");
         return AuthController.criarConta(usuario, senha);
     }
 
     public User fazerLogin(String usuario, String senha) {
+        System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " fazendo login");
+		System.out.println("---------------------------------------");
         return AuthController.fazerLogin(usuario, senha);
     }
 
     public User verSaldo(User user) {
+        System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " retornando saldo");
         Lock trava = this.mutex.getLock(String.format("%d", user.getConta()));
         try {
@@ -152,6 +157,7 @@ public class ClusterController implements Receiver {
             System.out.println("Devolvendo trava");
             trava.unlock();
         }
+        System.out.println("---------------------------------------");
         return user;
     }
 
@@ -175,6 +181,8 @@ public class ClusterController implements Receiver {
     }
 
     public User transferirDinheiro(Transferencia transferencia) {
+
+        System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " transferindo dinheiro");
 
         User origem = transferencia.getUserOrigem();
@@ -201,11 +209,14 @@ public class ClusterController implements Receiver {
             travaC1.unlock();
             travaC2.unlock();
         }
+        System.out.println("---------------------------------------");
         return origem;
     }
 
     public ArrayList<Transferencia> obterExtrato(User user) {
+        System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " extrato da conta");
+        System.out.println("---------------------------------------");
         return ContaController.obterExtrato(user);
     }
 
