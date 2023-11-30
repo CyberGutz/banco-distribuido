@@ -157,6 +157,7 @@ public class Client {
 
 		while (op != 0) {
 			try {
+				user.setErro(null);
 				System.out.println("--- MENU PRINCIPAL ---");
 				System.out.println("Olá " + user.getNome());
 				System.out.println("Conta: " + user.getConta() + "\n");
@@ -193,7 +194,8 @@ public class Client {
 							break;
 						}
 
-						if (destino.getUserDB(true) != null) {
+						destino = objetoRemoto.consultarConta(destino);
+						if (destino != null) {
 							System.out.println("---Dados da conta destino e transferência---");
 							System.out.println("Nome: " + destino.getNome());
 							System.out.println("Valor da transferência: R$" + valor);
@@ -218,7 +220,7 @@ public class Client {
 														// no forEach
 						ArrayList<Transferencia> transferencias = objetoRemoto.obterExtrato(userTransf);
 						System.out.println(String.format("------- Extrato Bancario %s --------", user.getNome()));
-						if (transferencias.isEmpty()) {
+						if (transferencias.isEmpty() || transferencias == null) {
 							System.out.println("Nenhuma transferencia para esta conta foi encontrada");
 						} else {
 							System.out.println("##################################");
@@ -258,9 +260,9 @@ public class Client {
 				System.out.println("Entrada inválida ! Tente novamente");
 			} catch (Exception e) {
 				op = -1;
-				scanner.nextLine();
+				// scanner.nextLine();
 				System.out.println(e.getMessage());
-				e.printStackTrace();
+				// e.printStackTrace();
 			}
 
 		}

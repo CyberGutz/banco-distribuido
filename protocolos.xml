@@ -4,11 +4,11 @@
         xsi:schemaLocation="urn:org:jgroups http://www.jgroups.org/schema/jgroups.xsd">
     <UDP />
     <PING />
-    <FD_ALL timeout="2000" interval="1000" timeout_check_interval="1000"/>
+    <FD_ALL timeout="2000" interval="100" timeout_check_interval="1000"/>
     <VERIFY_SUSPECT />
     <pbcast.NAKACK2 />
     <pbcast.STATE_TRANSFER /> 
     <CENTRAL_LOCK /> 
     <pbcast.GMS/> 
-    
+    <SEQUENCER />
 </config>

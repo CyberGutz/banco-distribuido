@@ -1,3 +1,11 @@
+# Trabalho para a Disciplina de Sistemas Distribuídos 1
+
+# Membros:
+
+- Alberto Gusmão Cabral Junior 
+- Gustavo Teixeira Magalhaes
+- Henrique Fugie de Macedo
+
 ## Compilando o projeto
 
 Caso queira compilar e ver os arquivos resultantes por conta própria, é necessário utilizar o maven para que seja feito o download das dependências, após a instalação do maven, digite o comando:

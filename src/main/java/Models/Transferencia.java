@@ -32,13 +32,19 @@ public class Transferencia implements java.io.Serializable {
         this.origem = origem;
     }
 
-    public void salvar() throws IOException {
+    public Transferencia(User origem, User destino,double valor){
+        this.origem = origem;
+        this.destino = destino;
+        this.valor = valor;
+    }
+
+    public void salvar() {
         
         JSONArray jsonArray;
         
         try (FileReader fileReader = new FileReader("transferencias.json")) {
             jsonArray = new JSONArray(new JSONTokener(fileReader));
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             jsonArray = new JSONArray();
         }
 
