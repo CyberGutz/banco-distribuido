@@ -46,6 +46,16 @@ public class Server extends UnicastRemoteObject implements API {
 	// RPC - Operações ------------------------------------------------------------
 	public User criarConta(String usuario, String senha) throws RemoteException {
 		System.out.println(String.format("Usuário pedindo criação de conta. Usuario %s Senha %s", usuario, senha));
+		User retorno;
+		MethodCall metodo = new MethodCall("criarConta", new Object[]{usuario, senha}, new Class[]{String.class});
+		RequestOptions opcoes = new RequestOptions();
+			opcoes.setMode(ResponseMode.GET_ALL);
+		try{
+			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
+			retorno = rsp.getFirst();
+		} catch (Exception e){
+			retorno.setErro(e.getMessage());
+		}
 		return AuthController.criarConta(usuario, senha);
 	}
 
