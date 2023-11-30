@@ -4,7 +4,14 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import org.json.JSONArray;
+import org.json.JSONTokener;
 
 public class State implements java.io.Serializable {
 
@@ -24,6 +31,22 @@ public class State implements java.io.Serializable {
 
         this.transferencias = bfis.readAllBytes();
         bfis.close();
+    }
+
+    public static void atualizarVersao() throws Exception{
+        int versao;
+        try {
+            versao = Integer.parseInt(new String(Files.readAllBytes(Paths.get("versao.txt"))));
+            System.out.println("catou a versão");
+        } catch (Exception e) { //primeira versao
+            System.out.println("nao catou a versao");
+            versao = 1;
+        }
+        System.out.println("versao:" + versao);
+        versao++;
+        System.out.println("versao nova :" + versao);
+        Files.write(Paths.get("versao.txt"), String.valueOf(versao).getBytes());
+        System.out.println("Versão atualizada");
     }
 
     public byte[] getUsers() {

@@ -11,7 +11,7 @@ fi
 
 if [[ ! -d "./target" || "$1" == "-r" ]]; #Verifica se existe a pasta target ou se o usuario passou uma flag de rebuild para buildar o projeto
   then
-    ./mvnw clean install
+    ./mvnw clean install -q
 fi
 
 if [[ "$@" =~ "-s" ]];

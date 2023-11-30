@@ -1,14 +1,1 @@
-[
-  {
-    "senha": "ebb999b2eba1b6680fdd7ef99ae182674c9c9d4014f631df62f5279a1fa7b4d6",
-    "conta": 1,
-    "usuario": "admin",
-    "creditos": 778
-  },
-  {
-    "senha": "5ecd02ff1f3cbd517412e36e47dd729b831206c75072691cec5abdc3150527a8",
-    "conta": 2,
-    "usuario": "admin2",
-    "creditos": 1220
-  }
-]
+[{"senha":"ebb999b2eba1b6680fdd7ef99ae182674c9c9d4014f631df62f5279a1fa7b4d6","conta":1,"usuario":"admin","creditos":500},{"senha":"5ecd02ff1f3cbd517412e36e47dd729b831206c75072691cec5abdc3150527a8","conta":2,"usuario":"admin2","creditos":1500}]

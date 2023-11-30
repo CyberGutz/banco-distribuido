@@ -96,12 +96,11 @@ public class Server extends UnicastRemoteObject implements API {
 			System.out.println("Enviando mensagem pra geral");
 			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo,
 					new RequestOptions(ResponseMode.GET_ALL, 2000));
-			ArrayList<Address> membrosSemErros = new ArrayList<Address>();
+			ArrayList<Address> membros = new ArrayList<Address>();
 			int erros = 0;
-			int semErros = 0;
 			String msg = "";
 			System.out.println(rsp);
-
+			
 			for (Entry<Address, Rsp<User>> user : rsp.entrySet()) { //iterando as respostas dos membros
 				if(!user.getValue().wasReceived()){
 					System.out.println("Membro não recebeu: " + user.getKey());
@@ -111,28 +110,25 @@ public class Server extends UnicastRemoteObject implements API {
 					msg = user.getValue().getValue().getErro();
 					erros++;
 				} else {
-					System.out.println("Sem erro: " + user.getKey());
-					membrosSemErros.add(user.getKey());
-					semErros++;
+					System.out.println("Sem erro: " + user.getKey());					
 				}
+				membros.add(user.getKey());
 			}
-			System.out.println(String.format("%d com erros, %d sem erro", erros, semErros));
+			System.out.println(String.format("%d com erros",erros));
 
 			if (erros > 0) {
-				//todos deram erro
+				// reverte
+				System.out.println("Revertendo transferência...");
+				cluster.getDispatcher().callRemoteMethods(membros,
+					"rollback",
+					new Object[]{estadoAtual},
+					new Class[]{State.class}, 
+					new RequestOptions(ResponseMode.GET_NONE,2000));
+				//todos deram erro,possivelmente possuem uma mensagem de erro em comum (como insuficiencia de saldo)
 				if(erros == rsp.size()){
 					throw new Exception(msg);
 				}
-				if (erros > semErros && semErros > 0) { // a maioria deu erro e tem que ter alguem sem erro pra reverter
-					// reverte
-					System.out.println("Revertendo transferência...");
-					cluster.getDispatcher().callRemoteMethods(membrosSemErros,
-						"rollback",
-						new Object[]{estadoAtual},
-						new Class[]{State.class}, 
-						new RequestOptions(ResponseMode.GET_NONE,2000));
-					throw new Exception("Serviço indisponível,tente novamente mais tarde!");
-				}
+				throw new Exception("Serviço indisponível,tente novamente mais tarde!");
 			}
 
 		} catch (Exception e) {
