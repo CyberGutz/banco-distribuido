@@ -52,14 +52,13 @@ public class ClusterController implements Receiver {
         while (this.channel.getView().size() < TAMANHO_MINIMO_CLUSTER) {
             Util.sleep(1000);
         }
-
+        
         if (souCoordenador()) {
             rmiServer = new RMIServerController();
             rmiServer.start();
         }
-
+        
         while (true) {
-
         }
     }
 
