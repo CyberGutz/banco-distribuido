@@ -1,20 +1,24 @@
 package Controllers;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Map.Entry;
 import java.util.concurrent.locks.Lock;
 
@@ -44,6 +48,7 @@ public class ClusterController implements Receiver {
 
     static final int TAMANHO_MINIMO_CLUSTER = 1;
     private boolean eraCoordenador = false;
+    private String meuIP = null;
 
     public ClusterController(JChannel channel) {
         this.channel = channel;
@@ -53,17 +58,19 @@ public class ClusterController implements Receiver {
         }
     }
 
-    public void bancoServer() {
+    public void bancoServer() throws SocketException {
 
         while (this.channel.getView().size() < TAMANHO_MINIMO_CLUSTER) {
             Util.sleep(1000);
         }
-        
+
+        this.meuIP = obterIP();
+
         if (souCoordenador()) {
-            rmiServer = new RMIServerController();
+            rmiServer = new RMIServerController(this.meuIP);
             rmiServer.start();
         }
-        
+
         while (true) {
         }
     }
@@ -73,7 +80,7 @@ public class ClusterController implements Receiver {
         if (souCoordenador()) {
             if (!this.eraCoordenador) {
                 eraCoordenador = true;
-                rmiServer = new RMIServerController();
+                rmiServer = new RMIServerController(this.meuIP);
                 rmiServer.start();
                 System.out.println("Virei o novo coordenador");
             }
@@ -83,10 +90,6 @@ public class ClusterController implements Receiver {
             this.obterEstado();
         }
     }
-
-    // public void receive(Message msg){
-    // System.out.println("Mensage braba: " + msg.getSrc());
-    // }
 
     public void getState(OutputStream output) {
 
@@ -138,19 +141,19 @@ public class ClusterController implements Receiver {
     public User criarConta(String usuario, String senha) {
         System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " criando conta");
-		System.out.println("---------------------------------------");
+        System.out.println("---------------------------------------");
         return AuthController.criarConta(usuario, senha);
     }
 
     public User fazerLogin(String usuario, String senha) {
         System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " fazendo login");
-		System.out.println("---------------------------------------");
+        System.out.println("---------------------------------------");
         return AuthController.fazerLogin(usuario, senha);
     }
 
-    public User consultarConta(User conta){
-        if(conta.getUserDB(true) == null){
+    public User consultarConta(User conta) {
+        if (conta.getUserDB(true) == null) {
             conta = null;
         }
         return conta;
@@ -165,10 +168,9 @@ public class ClusterController implements Receiver {
             trava.lock();
             System.out.println("Adquirido, vendo saldo...");
             user = ContaController.verSaldo(user);
-        } 
-        catch(Exception e){
+        } catch (Exception e) {
             user.setErro(e.getMessage());
-        }finally {
+        } finally {
             System.out.println("Devolvendo trava");
             trava.unlock();
         }
@@ -176,9 +178,9 @@ public class ClusterController implements Receiver {
         return user;
     }
 
-    public void rollback(State estado){
+    public void rollback(State estado) {
 
-        try {  
+        try {
             System.out.println("Rollback...");
             BufferedOutputStream bfos = new BufferedOutputStream(new FileOutputStream(new File("users.json")));
             bfos.write(estado.getUsers());
@@ -189,10 +191,10 @@ public class ClusterController implements Receiver {
             bfos.write(estado.getTransferencias());
             bfos.flush();
             bfos.close();
-        } catch (Exception e) {//se der qualquer erro na hora de transferir o estado, some do canal.
+        } catch (Exception e) {// se der qualquer erro na hora de transferir o estado, some do canal.
             this.channel.disconnect();
             this.conectarNoCanal();
-        } 
+        }
     }
 
     public User transferirDinheiro(Transferencia transferencia) {
@@ -213,13 +215,13 @@ public class ClusterController implements Receiver {
             travaC2.lock();
             System.out.println("Adquirido, transferindo...");
             origem = ContaController.transferirDinheiro(transferencia);
-        } catch(Exception e){
-            //sai do canal e se reconecta
+        } catch (Exception e) {
+            // sai do canal e se reconecta
             System.out.println("Erro na transferência: " + e.getMessage());
             System.out.println("Saindo do canal..");
             this.channel.disconnect();
             this.conectarNoCanal();
-        }finally {
+        } finally {
             System.out.println("Devolvendo trava");
             travaC1.unlock();
             travaC2.unlock();
@@ -270,7 +272,7 @@ public class ClusterController implements Receiver {
                 this.mutex = new LockService(this.channel);
                 conectou = true;
                 System.out.println("Conectado!");
-                if(!this.souCoordenador()){
+                if (!this.souCoordenador()) {
                     this.obterEstado();
                 }
             } catch (Exception e) {
@@ -289,19 +291,21 @@ public class ClusterController implements Receiver {
         boolean obteuEstado = false;
         while (true) {
             try {
-                //vendo quem tem o estado mais recente
-                RspList<Integer> rsp = this.dispatcher.callRemoteMethods(null, "consultarVersao", null, null, new RequestOptions(ResponseMode.GET_ALL,2000));
+                // vendo quem tem o estado mais recente
+                RspList<Integer> rsp = this.dispatcher.callRemoteMethods(null, "consultarVersao", null, null,
+                        new RequestOptions(ResponseMode.GET_ALL, 2000));
+                System.out.println("estado rsp: " + rsp);
                 int maiorVersao = 0;
                 Address maiorAddr = null;
-                for(Entry<Address,Rsp<Integer>> versao: rsp.entrySet()){
-                    if(versao.getValue().wasReceived()){
-                        if(versao.getValue().getValue() > maiorVersao){
+                for (Entry<Address, Rsp<Integer>> versao : rsp.entrySet()) {
+                    if (versao.getValue().wasReceived()) {
+                        if (versao.getValue().getValue() > maiorVersao) {
                             maiorVersao = versao.getValue().getValue();
-                            maiorAddr = versao.getKey(); 
+                            maiorAddr = versao.getKey();
                         }
                     }
                 }
-                System.out.println("Quem tem a versão mais recente: " + maiorAddr + "Versão " + maiorVersao);
+                System.out.println("Quem tem a versão mais recente: " + maiorAddr + " Versão " + maiorVersao);
                 this.channel.getState(maiorAddr, 10000);
                 obteuEstado = true;
             } catch (Exception e) {
@@ -314,6 +318,29 @@ public class ClusterController implements Receiver {
                 break;
             }
         }
+    }
+
+    public static String obterIP() throws SocketException {
+        ArrayList<String> ips = new ArrayList<String>();
+        int i = 0;
+        System.out.println("---- Seleção de Interface de Rede ----");
+        for (Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces(); ifaces
+                .hasMoreElements();) {
+            NetworkInterface iface = ifaces.nextElement();
+            for (Enumeration<InetAddress> addresses = iface.getInetAddresses(); addresses.hasMoreElements();) {
+                InetAddress address = addresses.nextElement();
+                if (address instanceof Inet6Address) // nao quero ipv6
+                    continue;
+                ips.add(address.getHostAddress());
+                System.out.println(String.format("[%d] %s - %s", i, iface.getName(), address.getHostAddress()));
+                i++;
+            }
+        }
+
+        System.out.println("Escolha a interface de rede adequada: ");
+        int op = new Scanner(System.in).nextInt();
+        System.out.println("---------------------------------------");
+        return ips.get(op);
     }
 
     // --------------------------------------------------------------------------------

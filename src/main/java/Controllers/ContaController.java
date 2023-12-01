@@ -24,7 +24,7 @@ public class ContaController {
         try {
             //atualiza saldo das contas antes de transferir
             origem.getUserDB(true);
-            destino.getUserDB(false);
+            destino.getUserDB(true);
             if(origem.getCreditos() - valor < 0.0 || origem.getCreditos() == 0.0){ //nao tem dinheiro suficiente pra transferencia
                 System.out.println(origem.getNome() + " com saldo insuficiente");
                 throw new Exception("Saldo insuficiente");
