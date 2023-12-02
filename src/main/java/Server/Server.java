@@ -71,13 +71,24 @@ public class Server extends UnicastRemoteObject implements API {
 		System.out.println("---------------------------------------");
 		System.out.println(String.format("Usuário %s consultando seu saldo", user.getNome()));
 		MethodCall metodo = new MethodCall("verSaldo", new Object[] { user }, new Class[] { User.class });
-		RequestOptions opcoes = new RequestOptions();
-		opcoes.setMode(ResponseMode.GET_FIRST);
 		try {
-			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
-			user = rsp.getFirst();
+			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, new RequestOptions(ResponseMode.GET_ALL,2000));
+			for (Entry<Address, Rsp<User>> userRsp : rsp.entrySet()) { //iterando as respostas dos membros
+				if(!userRsp.getValue().wasReceived()){
+					System.out.println("Membro não recebeu: " + userRsp.getKey());
+				}else if(userRsp.getValue().getValue().getErro() != null){ //membro recebeu mas deu erro 
+					cluster.getDispatcher().callRemoteMethod(userRsp.getKey(), "desconectar",null,null,new RequestOptions(ResponseMode.GET_NONE,2000));
+				} else {
+					System.out.println("Sem erro: " + userRsp.getKey());
+					if(userRsp.getValue().getValue().getVersao() >= user.getVersao()){ //obtendo o saldo mais atualizado possível
+						user = userRsp.getValue().getValue();					
+					}else{ //algum membro ta com a versão desatualizada
+						cluster.getDispatcher().callRemoteMethod(userRsp.getKey(), "desconectar",null,null,new RequestOptions(ResponseMode.GET_NONE,2000));
+					}
+				}
+			}
 		} catch (Exception e) {
-			System.out.println("Erro ao enviar saldo: " + e.getMessage());
+			System.out.println("Erro ao verificar saldo: " + e.getMessage());
 			user.setErro(e.getMessage());
 		}
 		System.out.println("---------------------------------------");
@@ -96,43 +107,40 @@ public class Server extends UnicastRemoteObject implements API {
 			System.out.println("Enviando mensagem pra geral");
 			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo,
 					new RequestOptions(ResponseMode.GET_ALL, 2000));
-			ArrayList<Address> membrosSemErros = new ArrayList<Address>();
+			ArrayList<Address> membros = new ArrayList<Address>();
 			int erros = 0;
-			int semErros = 0;
 			String msg = "";
 			System.out.println(rsp);
-
+			
 			for (Entry<Address, Rsp<User>> user : rsp.entrySet()) { //iterando as respostas dos membros
 				if(!user.getValue().wasReceived()){
 					System.out.println("Membro não recebeu: " + user.getKey());
 					erros++;
+					cluster.getDispatcher().callRemoteMethod(user.getKey(), "desconectar",null,null,new RequestOptions(ResponseMode.GET_NONE,2000)); //expulsa o membro pra ele ressincronizar
 				}else if(user.getValue().getValue().getErro() != null){ //membro recebeu mas deu erro 
 					System.out.println("Erro " + user.getKey() + ": " + user.getValue().getValue().getErro());
 					msg = user.getValue().getValue().getErro();
 					erros++;
 				} else {
-					System.out.println("Sem erro: " + user.getKey());
-					membrosSemErros.add(user.getKey());
-					semErros++;
+					System.out.println("Sem erro: " + user.getKey());					
 				}
+				membros.add(user.getKey());
 			}
-			System.out.println(String.format("%d com erros, %d sem erro", erros, semErros));
+			System.out.println(String.format("%d com erros",erros));
 
 			if (erros > 0) {
-				//todos deram erro
+				// reverte
+				System.out.println("Revertendo transferência...");
+				cluster.getDispatcher().callRemoteMethods(membros,
+					"rollback",
+					new Object[]{estadoAtual},
+					new Class[]{State.class}, 
+					new RequestOptions(ResponseMode.GET_NONE,2000));
+				//todos deram erro,possivelmente possuem uma mensagem de erro em comum (como insuficiencia de saldo)
 				if(erros == rsp.size()){
 					throw new Exception(msg);
 				}
-				if (erros > semErros && semErros > 0) { // a maioria deu erro e tem que ter alguem sem erro pra reverter
-					// reverte
-					System.out.println("Revertendo transferência...");
-					cluster.getDispatcher().callRemoteMethods(membrosSemErros,
-						"rollback",
-						new Object[]{estadoAtual},
-						new Class[]{State.class}, 
-						new RequestOptions(ResponseMode.GET_NONE,2000));
-					throw new Exception("Serviço indisponível,tente novamente mais tarde!");
-				}
+				throw new Exception("Serviço indisponível,tente novamente mais tarde!");
 			}
 
 		} catch (Exception e) {
