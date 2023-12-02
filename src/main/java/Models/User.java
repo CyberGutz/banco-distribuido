@@ -22,6 +22,12 @@ public class User implements java.io.Serializable {
     // atributos auxiliares
     private String erro;
     private String senha;
+    private int versao;
+
+
+    public int getVersao() {
+        return versao;
+    }
 
     /**
      * Construtor usado na instância do cliente
@@ -43,6 +49,7 @@ public class User implements java.io.Serializable {
 
         try {
             JSONArray jsonArray = new JSONArray(new JSONTokener(new FileReader("users.json")));
+            this.versao = State.consultarVersao();
             for (Object user : jsonArray) { // verificando se o usuario existe
                 JSONObject jsonUser = new JSONObject(user.toString());
                 if (jsonUser.getString("usuario").equals(this.nome) || jsonUser.getInt("conta") == this.conta) {

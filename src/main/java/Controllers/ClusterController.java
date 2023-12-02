@@ -164,14 +164,11 @@ public class ClusterController implements Receiver {
         System.out.println(this.channel.getAddress() + " retornando saldo");
         Lock trava = this.mutex.getLock(String.format("%d", user.getConta()));
         try {
-            System.out.println("Adquirindo seção crítica..");
             trava.lock();
-            System.out.println("Adquirido, vendo saldo...");
             user = ContaController.verSaldo(user);
         } catch (Exception e) {
             user.setErro(e.getMessage());
         } finally {
-            System.out.println("Devolvendo trava");
             trava.unlock();
         }
         System.out.println("---------------------------------------");
@@ -210,19 +207,13 @@ public class ClusterController implements Receiver {
         Lock travaC1 = this.mutex.getLock(String.format("%d", origem.getConta()));
         Lock travaC2 = this.mutex.getLock(String.format("%d", destino.getConta()));
         try {
-            System.out.println("Adquirindo seção crítica..");
             travaC1.lock();
             travaC2.lock();
-            System.out.println("Adquirido, transferindo...");
             origem = ContaController.transferirDinheiro(transferencia);
         } catch (Exception e) {
-            // sai do canal e se reconecta
             System.out.println("Erro na transferência: " + e.getMessage());
-            System.out.println("Saindo do canal..");
-            this.channel.disconnect();
-            this.conectarNoCanal();
+            origem.setErro(e.getMessage());
         } finally {
-            System.out.println("Devolvendo trava");
             travaC1.unlock();
             travaC2.unlock();
         }
@@ -240,6 +231,7 @@ public class ClusterController implements Receiver {
     public int consultarVersao() {
         return State.consultarVersao();
     }
+
 
     // ----------------------------------------------------
     // Getters e Métodos Utilitarios --------
@@ -285,6 +277,12 @@ public class ClusterController implements Receiver {
                 break;
             }
         }
+    }
+
+    public void desconectar(){
+        System.out.println("Desconectando do canal e ressincronizando...");
+        this.channel.disconnect();
+        this.conectarNoCanal();
     }
 
     private void obterEstado() {

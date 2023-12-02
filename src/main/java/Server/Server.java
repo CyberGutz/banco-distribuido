@@ -71,13 +71,24 @@ public class Server extends UnicastRemoteObject implements API {
 		System.out.println("---------------------------------------");
 		System.out.println(String.format("Usuário %s consultando seu saldo", user.getNome()));
 		MethodCall metodo = new MethodCall("verSaldo", new Object[] { user }, new Class[] { User.class });
-		RequestOptions opcoes = new RequestOptions();
-		opcoes.setMode(ResponseMode.GET_FIRST);
 		try {
-			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
-			user = rsp.getFirst();
+			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, new RequestOptions(ResponseMode.GET_ALL,2000));
+			for (Entry<Address, Rsp<User>> userRsp : rsp.entrySet()) { //iterando as respostas dos membros
+				if(!userRsp.getValue().wasReceived()){
+					System.out.println("Membro não recebeu: " + userRsp.getKey());
+				}else if(userRsp.getValue().getValue().getErro() != null){ //membro recebeu mas deu erro 
+					cluster.getDispatcher().callRemoteMethod(userRsp.getKey(), "desconectar",null,null,new RequestOptions(ResponseMode.GET_NONE,2000));
+				} else {
+					System.out.println("Sem erro: " + userRsp.getKey());
+					if(userRsp.getValue().getValue().getVersao() >= user.getVersao()){ //obtendo o saldo mais atualizado possível
+						user = userRsp.getValue().getValue();					
+					}else{ //algum membro ta com a versão desatualizada
+						cluster.getDispatcher().callRemoteMethod(userRsp.getKey(), "desconectar",null,null,new RequestOptions(ResponseMode.GET_NONE,2000));
+					}
+				}
+			}
 		} catch (Exception e) {
-			System.out.println("Erro ao enviar saldo: " + e.getMessage());
+			System.out.println("Erro ao verificar saldo: " + e.getMessage());
 			user.setErro(e.getMessage());
 		}
 		System.out.println("---------------------------------------");
@@ -105,6 +116,7 @@ public class Server extends UnicastRemoteObject implements API {
 				if(!user.getValue().wasReceived()){
 					System.out.println("Membro não recebeu: " + user.getKey());
 					erros++;
+					cluster.getDispatcher().callRemoteMethod(user.getKey(), "desconectar",null,null,new RequestOptions(ResponseMode.GET_NONE,2000)); //expulsa o membro pra ele ressincronizar
 				}else if(user.getValue().getValue().getErro() != null){ //membro recebeu mas deu erro 
 					System.out.println("Erro " + user.getKey() + ": " + user.getValue().getValue().getErro());
 					msg = user.getValue().getValue().getErro();
