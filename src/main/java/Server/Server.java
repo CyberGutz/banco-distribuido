@@ -36,8 +36,55 @@ public class Server extends UnicastRemoteObject implements API {
 
 	// RPC - Operações ------------------------------------------------------------
 	public User criarConta(String usuario, String senha) throws RemoteException {
-		System.out.println(String.format("Usuário pedindo criação de conta. Usuario %s Senha %s", usuario, senha));
-		return AuthController.criarConta(usuario, senha);
+		User retorno = null;
+		try {
+			State estadoAtual = new State();
+			System.out.println(String.format("Usuário pedindo criação de conta. Usuario %s Senha %s", usuario, senha));
+			MethodCall metodo = new MethodCall("criarConta", new Object[]{usuario, senha}, new Class[]{String.class});
+			RequestOptions opcoes = new RequestOptions(ResponseMode.GET_ALL, 2000);
+			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
+			ArrayList<Address> membrosSemErros = new ArrayList<Address>();
+			int erros = 0;
+			int semErros = 0;
+			String msg = "";
+			System.out.println(rsp);
+
+			for(Entry<Address, Rsp<User>> user : rsp.entrySet()){
+				if(user.getValue().wasReceived()){
+					System.out.println("Membro não recebeu" + user.getKey());
+				}
+				if(user.getValue().getValue().getErro() == null){
+					semErros ++;
+					membrosSemErros.add(user.getKey());
+					retorno = user.getValue().getValue();
+				}
+				else{
+					// Revertendo contas criadas
+					erros++;
+					msg = user.getValue().getValue().getErro();
+				}
+			}
+			System.out.println(String.format("%d com erros, %d sem erro", erros, semErros));
+			if(erros > 0){
+				//todos deram erro
+				if(erros == rsp.size()){
+					throw new Exception(msg);
+				}
+				if(erros > semErros && semErros > 0){ // A maioria deu erro
+					System.out.println("Revertendo criação de conta...");
+					cluster.getDispatcher().callRemoteMethods(membrosSemErros, 
+						"rollback",
+						new Object[]{estadoAtual},
+						new Class[]{State.class}, 
+						new RequestOptions(ResponseMode.GET_NONE,2000));
+					throw new Exception("Serviço indisponível,tente novamente mais tarde!");
+				}
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			retorno.setErro(e.getMessage());
+		}
+		return retorno;
 	}
 
 	public User fazerLogin(String usuario, String senha) throws RemoteException {
@@ -154,6 +201,17 @@ public class Server extends UnicastRemoteObject implements API {
 	public ArrayList<Transferencia> obterExtrato(User user) throws RemoteException {
 		System.out.println(String.format("Usuário %s consultando extrato", user.getNome()));
 		return ContaController.obterExtrato(user);
+	}
+
+	public int consultarMontante(){
+		try {
+			State estadoAtual = new State();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+
+
+		return 0;
 	}
 
 }
