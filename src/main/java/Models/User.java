@@ -22,6 +22,12 @@ public class User implements java.io.Serializable {
     // atributos auxiliares
     private String erro;
     private String senha;
+    private int versao;
+
+
+    public int getVersao() {
+        return versao;
+    }
 
     /**
      * Construtor usado na instância do cliente
@@ -43,6 +49,7 @@ public class User implements java.io.Serializable {
 
         try {
             JSONArray jsonArray = new JSONArray(new JSONTokener(new FileReader("users.json")));
+            this.versao = State.consultarVersao();
             for (Object user : jsonArray) { // verificando se o usuario existe
                 JSONObject jsonUser = new JSONObject(user.toString());
                 if (jsonUser.getString("usuario").equals(this.nome) || jsonUser.getInt("conta") == this.conta) {
@@ -93,6 +100,7 @@ public class User implements java.io.Serializable {
                 fileWriter.close();
                 this.setConta(contaNum);
                 this.setCreditos(1000.00);
+                State.atualizarVersao();
             } catch (Exception e) {
                 this.setErro("Erro ao salvar usuário:" + e.getMessage());
             }
@@ -114,12 +122,12 @@ public class User implements java.io.Serializable {
                 FileWriter fileWriter = new FileWriter("users.json");
                 fileWriter.write(jsonArray.toString());
                 fileWriter.close();
+                State.atualizarVersao();
             } catch (Exception e) {
                 this.setErro("Erro ao alterar usuário:" + e.getMessage());
             }
 
         }
-
     }
 
     public void realizarLogin() {

@@ -1,9 +1,7 @@
 package Models;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -61,6 +59,7 @@ public class Transferencia implements java.io.Serializable {
             FileWriter fileWriter = new FileWriter("transferencias.json");
             fileWriter.write(jsonArray.toString());
             fileWriter.close();
+            State.atualizarVersao();
         } catch (Exception e) {
             this.setErro("Erro ao salvar transferência:" + e.getMessage());
         }

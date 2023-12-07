@@ -1,18 +1,22 @@
 package Controllers;
 
 import java.net.DatagramPacket;
+import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.rmi.Naming;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Enumeration;
 
 import Server.Server;
 
 public class RMIServerController extends Thread {
+
+    private String meuIP=null;
+
+    public RMIServerController(String meuIP){
+        this.meuIP = meuIP;
+    }
 
     public void run() {
 
@@ -33,13 +37,13 @@ public class RMIServerController extends Thread {
             MulticastSocket socket = new MulticastSocket(port);
             InetAddress addr = InetAddress.getByName(ip);
             socket.joinGroup(addr);
-            String meuIP = obterIP();
+   
             //sobrescrevendo o nome do hostname do rmi senao ao realizar o lookup, o IP sai como e endereço de loopback
             //isso pode ser problematica caso o cliente esteja em outra maquina, tal que o IP do coordenador não é o localhost
-            System.setProperty("java.rmi.server.hostname", meuIP);
+            System.setProperty("java.rmi.server.hostname", this.meuIP);
             Server obj = new Server();
-            System.out.println("IP do Registry: " + meuIP);
-            String rmiAddr = String.format("rmi://%s/banco", meuIP);
+            System.out.println("IP do Registry: " + this.meuIP);
+            String rmiAddr = String.format("rmi://%s/banco", this.meuIP);
             try {
                 java.rmi.registry.LocateRegistry.getRegistry(1099);
                 System.out.println("Pegando serviço registry já criado");
@@ -74,26 +78,6 @@ public class RMIServerController extends Thread {
             System.out.println("Erro rmiserver: " + e.getMessage());
         }
 
-    }
-
-    public static String obterIP() throws SocketException {
-        String ip = null;
-        for (Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces(); ifaces
-                .hasMoreElements();) {
-            NetworkInterface iface = ifaces.nextElement();
-            if (iface.getName().equals("eno1") || iface.getName().contains("eth")) {
-                //procurando a interface ethernet POSSIVELMENTE adequeada
-                // System.out.println(iface.getName() + ":");
-                for (Enumeration<InetAddress> addresses = iface.getInetAddresses(); addresses.hasMoreElements();) {
-                    InetAddress address = addresses.nextElement();
-                    if (address instanceof Inet6Address) //nao quero ipv6
-                        continue;
-                    ip = address.getHostAddress();
-                    // System.out.println(" " + ip);
-                }
-            }
-        }
-        return ip;
     }
 
 }
