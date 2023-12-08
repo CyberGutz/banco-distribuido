@@ -50,8 +50,9 @@ public class ClusterController implements Receiver {
     private boolean eraCoordenador = false;
     private String meuIP = null;
 
-    public ClusterController(JChannel channel) {
+    public ClusterController(JChannel channel,String ipRMI) {
         this.channel = channel;
+        this.meuIP = ipRMI;
         this.conectarNoCanal();
         if (this.souCoordenador()) {
             eraCoordenador = true;
@@ -63,8 +64,6 @@ public class ClusterController implements Receiver {
         while (this.channel.getView().size() < TAMANHO_MINIMO_CLUSTER) {
             Util.sleep(1000);
         }
-
-        this.meuIP = obterIP();
 
         if (souCoordenador()) {
             rmiServer = new RMIServerController(this.meuIP);
@@ -229,13 +228,13 @@ public class ClusterController implements Receiver {
     }
 
     public int obterMontante(){
-        File file = new File("users.json");
-        try {
-            BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+        // File file = new File("users.json");
+        // try {
+        //     BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
+        // } catch (FileNotFoundException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // }
         return 0;
     }
 

@@ -9,6 +9,6 @@
     <pbcast.NAKACK2 />
     <pbcast.STATE_TRANSFER /> 
     <CENTRAL_LOCK /> 
-    <pbcast.GMS/> 
-    <SEQUENCER />
+    <pbcast.GMS  log_view_warnings="false"/> 
+    <SEQUENCER/>
 </config>
