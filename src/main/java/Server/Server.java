@@ -159,26 +159,41 @@ public class Server extends UnicastRemoteObject implements API {
 	}
 
 	public Double obterMontante(){
-		Double montante = -1.0;
+		Double montante = 0.0;
+		Double erro = -1.0;
+		int erros = 0;
+		int semErros = 1;
+
 		try {
 			MethodCall metodo = new MethodCall("obterMontante", null, new Class[]{Double.class});
 			System.out.println("Obtendo montante");
 			RspList<Double> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, new RequestOptions(ResponseMode.GET_ALL, timeout));
 			for (Entry<Address, Rsp<Double>> monte: rsp.entrySet()){
 				if(monte.getValue().wasReceived()){
-					if(monte.getValue().getValue() != -1.0){
+					if(monte.getValue().getValue() != -1.0){	// Se recebeu e deu certo.
 						montante = monte.getValue().getValue();
+						semErros ++;
+					}
+					else{ // Se recebeu, mas deu erro
+						erros ++;
 					}
 				}
-				else{
-					return -1.0;
+				else{ // Se não recebeu.
+					erros++;
 				}
 			}
 		} catch (Exception e) {
 			System.out.println("Erro ao consultar montante: " + e);
-			return -1.0;
+			return erro;
 		}
-		return montante;
+		if(erros > 0){
+			System.out.println("Consulta de montante realizada com sucesso! Montante: " + montante);
+			return erro;
+		}
+		else{
+			System.out.println("Falha ao consultar montante. \nMembros com erro: "+ erros + "\nMembros sem erro" + semErros);
+			return montante;
+		}
 	}
 	
 	private static User processarRespostas(RspList<User> rsp, State estadoAtual) {
