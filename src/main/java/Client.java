@@ -172,6 +172,10 @@ public class Client {
 
 				switch (op) {
 					case 0: {
+						System.out.println("*************************");
+						System.out.println("Saindo . . . ");
+						objetoRemoto.logout(user);
+						System.out.println("Volte Sempre !");
 						break;
 					}
 					case 1: {

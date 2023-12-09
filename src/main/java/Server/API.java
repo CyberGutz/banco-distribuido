@@ -21,4 +21,6 @@ public interface API extends Remote {
 	ArrayList<Transferencia> obterExtrato(User user) throws RemoteException;
 
 	Double obterMontante() throws RemoteException;
+
+	boolean logout(User user) throws RemoteException;
 }
