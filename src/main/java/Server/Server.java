@@ -1,5 +1,6 @@
 package Server;
 
+import java.lang.reflect.Method;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.ArrayList;
@@ -166,7 +167,14 @@ public class Server extends UnicastRemoteObject implements API {
 
 	public ArrayList<Transferencia> obterExtrato(User user) throws RemoteException {
 		System.out.println(String.format("Usuário %s consultando extrato", user.getNome()));
-		return ContaController.obterExtrato(user);
+		try{
+			MethodCall metodo = new MethodCall("obterExtrato", new Object[] {user}, new Class[] {User.class});
+			Rsp<ArrayList<Transferencia>> rsp = cluster.getDispatcher().callRemoteMethod(cluster.getRandomMember(), metodo, null);
+			return rsp.getValue();
+		} catch (Exception e){
+			System.out.println("Erro ao consultar extrato: " + e);
+			return null;
+		}
 	}
 
 	public Double obterMontante(){
