@@ -1,9 +1,11 @@
 package Controllers;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -232,9 +234,9 @@ public class ClusterController implements Receiver {
         File file = new File("users.json");
         try {
             BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            bfis.close();
+        } catch (IOException e) {
+            System.out.println(e);
         }
         return 0;
     }
