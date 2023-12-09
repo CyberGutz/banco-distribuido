@@ -3,8 +3,6 @@ package Models;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -14,22 +12,29 @@ public class State implements java.io.Serializable {
     private byte[] transferencias;
     private int versao;
 
-    public State() throws FileNotFoundException, IOException {
-        
-        this.versao = consultarVersao();
-    
-        File file = new File("users.json");
+    public State() {
+        try {
+   
+            File file = new File("users.json");
 
-        BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
+            BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
 
-        this.users = bfis.readAllBytes();
-        bfis.close();
+            this.users = bfis.readAllBytes();
+            bfis.close();
 
-        file = new File("transferencias.json");
-        bfis = new BufferedInputStream(new FileInputStream(file));
+            file = new File("transferencias.json");
+            bfis = new BufferedInputStream(new FileInputStream(file));
 
-        this.transferencias = bfis.readAllBytes();
-        bfis.close();
+            this.transferencias = bfis.readAllBytes();
+            bfis.close();
+
+            this.versao = consultarVersao();
+        } catch (Exception e) {
+            //inicializa um estado vazio
+            this.versao = 1;
+            this.users = new byte[0];
+            this.transferencias = new byte[0]; 
+        }
     }
 
     public static int consultarVersao(){
