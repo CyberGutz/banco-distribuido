@@ -24,10 +24,7 @@ public class User implements java.io.Serializable {
     private String senha;
     private int versao;
 
-
-    public int getVersao() {
-        return versao;
-    }
+    private String token;
 
     /**
      * Construtor usado na instância do cliente
@@ -53,7 +50,7 @@ public class User implements java.io.Serializable {
             for (Object user : jsonArray) { // verificando se o usuario existe
                 JSONObject jsonUser = new JSONObject(user.toString());
                 if (jsonUser.getString("usuario").equals(this.nome) || jsonUser.getInt("conta") == this.conta) {
-                    if(refresh){
+                    if (refresh) {
                         this.setNome(jsonUser.getString("usuario"));
                         this.setConta(jsonUser.getInt("conta"));
                         this.setCreditos(jsonUser.getDouble("creditos"));
@@ -84,7 +81,7 @@ public class User implements java.io.Serializable {
         JSONObject user = this.getUserDB(false);
 
         if (user == null) { // cria novo usuario
-            
+
             try {
                 user = new JSONObject();
                 user.put("usuario", this.nome);
@@ -100,21 +97,22 @@ public class User implements java.io.Serializable {
                 fileWriter.close();
                 this.setConta(contaNum);
                 this.setCreditos(1000.00);
+                this.setToken(token);
                 State.atualizarVersao();
             } catch (Exception e) {
                 this.setErro("Erro ao salvar usuário:" + e.getMessage());
             }
         } else {// atualiza novo usuario
-            try {     
-                
+            try {
+
                 System.out.println("Atualizando usuario " + this.getNome());
                 user.put("creditos", this.creditos);
-                user.put("usuario", this.nome);           
-                
-                for(int i=0;i < jsonArray.length();i++){
+                user.put("usuario", this.nome);
+
+                for (int i = 0; i < jsonArray.length(); i++) {
                     JSONObject userJson = new JSONObject(jsonArray.get(i).toString());
-                    if(userJson.getInt("conta") == this.conta){
-                        jsonArray.put(i,user);
+                    if (userJson.getInt("conta") == this.conta) {
+                        jsonArray.put(i, user);
                         break;
                     }
                 }
@@ -138,6 +136,9 @@ public class User implements java.io.Serializable {
 
             int conta = userEncontrado.getInt("conta");
             double creditos = userEncontrado.getDouble("creditos");
+            String token = userEncontrado.getString("senha");
+            System.out.println("token");
+            System.out.println(token);
 
             // removendo atributos, deve ser comparado o token gerado apenas com as chaves
             // "usuario" e "senha " do JSON
@@ -149,11 +150,13 @@ public class User implements java.io.Serializable {
             userLogin.put("usuario", this.nome);
             userLogin.put("senha", this.senha);
 
-            //verifica se a combinação usuario e senha inserida pelo usuario gera o token de autenticação criado para o mesmo
+            // verifica se a combinação usuario e senha inserida pelo usuario gera o token
+            // de autenticação criado para o mesmo
             if (User.criarToken(userLogin.toString()).equals(User.criarToken(userEncontrado.toString()))) {
                 // retorno.put("token", jsonUser.getString("senha"));
                 this.setConta(conta);
                 this.setCreditos(creditos);
+                this.setToken(token);
             } else {
                 this.setErro("Senha inválida!");
             }
@@ -213,7 +216,7 @@ public class User implements java.io.Serializable {
         this.creditos = creditos;
     }
 
-    public ArrayList<Transferencia> getExtrato(){
+    public ArrayList<Transferencia> getExtrato() {
         Transferencia transf = new Transferencia(this);
         return transf.getTransferenciasUserOrigem();
     }
@@ -224,6 +227,18 @@ public class User implements java.io.Serializable {
 
     public void setErro(String erro) {
         this.erro = erro;
+    }
+
+    public String getToken() {
+        return this.token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public int getVersao() {
+        return versao;
     }
 
 }

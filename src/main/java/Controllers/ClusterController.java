@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Vector;
 import java.util.Map.Entry;
 import java.util.concurrent.locks.Lock;
 
@@ -51,6 +52,8 @@ public class ClusterController implements Receiver {
     static final int TAMANHO_MINIMO_CLUSTER = 1;
     private boolean eraCoordenador = false;
     private String meuIP = null;
+
+    private Vector<String> usersLogados = new Vector<String>();
 
     public ClusterController(JChannel channel,String ipRMI) {
         this.channel = channel;
@@ -96,7 +99,7 @@ public class ClusterController implements Receiver {
 
         try {
             // escreve na saída do pedinte do estado
-            Util.objectToStream(new State(), new DataOutputStream(output));
+            Util.objectToStream(new State(this), new DataOutputStream(output));
             System.out.println("Estado enviado.");
         } catch (FileNotFoundException e) {
             System.out.println("Arquivo(s) não encontrado(s) ao transferir estado: " + e.getMessage());
@@ -126,6 +129,7 @@ public class ClusterController implements Receiver {
 
             Files.write(Paths.get("versao.txt"), String.valueOf(state.getVersao()).getBytes());
 
+            this.usersLogados = state.getUsersLogados();
             System.out.println("Leu o estado do coordenador: " + this.channel.view().getCoord());
         } catch (IOException e) {
             System.out.println("Erro ao ler estado: " + e.getMessage());
@@ -143,14 +147,31 @@ public class ClusterController implements Receiver {
         System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " criando conta");
         System.out.println("---------------------------------------");
-        return AuthController.criarConta(usuario, senha);
+        Util.sleep(5000);
+        User retorno = AuthController.criarConta(usuario, senha);
+        if(retorno.getErro() == null){
+            //adiciona como logado
+            this.usersLogados.add(retorno.getToken());
+        }
+        return retorno;
     }
 
     public User fazerLogin(String usuario, String senha) {
         System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " fazendo login");
         System.out.println("---------------------------------------");
-        return AuthController.fazerLogin(usuario, senha);
+        User retorno = AuthController.fazerLogin(usuario, senha);
+        System.out.println("retorno login");
+        System.out.println(retorno);
+        if(retorno.getErro() == null){
+            System.out.println("checando se ta logado");
+            if(this.usersLogados.contains(retorno.getToken())){
+                retorno.setErro("Usuário já está logado");
+            }else{//nao ta logado, adiciona-lo na lista de loagdos
+                this.usersLogados.add(retorno.getToken());
+            }
+        }
+        return retorno;
     }
 
     public User consultarConta(User conta) {
@@ -199,6 +220,7 @@ public class ClusterController implements Receiver {
 
         System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " transferindo dinheiro");
+        Util.sleep(5000);
 
         User origem = transferencia.getUserOrigem();
         User destino = transferencia.getUserDestino();
@@ -263,11 +285,21 @@ public class ClusterController implements Receiver {
                         this.channel.getView().getMembers().get(0)));
     }
 
+    public Vector<String> getUsersLogados(){
+        return usersLogados;
+    }
+
+    public void setUsersLogados(String token){
+        usersLogados.add(token);
+    }
+
     private void conectarNoCanal() {
         boolean conectou = false;
+        this.dispatcher = null;
+        this.mutex = null;
         while (true) {
             try {
-                this.channel = this.channel.connect("banco");
+                this.channel.connect("banco");
                 this.dispatcher = new RpcDispatcher(this.channel, this);
                 this.dispatcher.setReceiver(this);
                 this.mutex = new LockService(this.channel);
@@ -291,8 +323,6 @@ public class ClusterController implements Receiver {
     public void desconectar(){
         System.out.println("Desconectando do canal e ressincronizando...");
         this.channel.disconnect();
-        this.dispatcher = null;
-        this.channel = null;
         this.conectarNoCanal();
     }
 
