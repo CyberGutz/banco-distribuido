@@ -173,7 +173,7 @@ public class Client {
 				switch (op) {
 					case 0: {
 						System.out.println("*************************");
-						System.out.println("Saindo . . . ");
+						System.out.println("Saindo... ");
 						objetoRemoto.logout(user);
 						System.out.println("Volte Sempre !");
 						break;
@@ -258,6 +258,7 @@ public class Client {
 							System.out.println("Montante total do Banco: " + montante);
 							System.out.println("##################################");
 						}
+						break;
 					}
 					default: {
 						op = -1;

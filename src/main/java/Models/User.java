@@ -137,9 +137,7 @@ public class User implements java.io.Serializable {
             int conta = userEncontrado.getInt("conta");
             double creditos = userEncontrado.getDouble("creditos");
             String token = userEncontrado.getString("senha");
-            System.out.println("token");
-            System.out.println(token);
-
+            
             // removendo atributos, deve ser comparado o token gerado apenas com as chaves
             // "usuario" e "senha " do JSON
             userEncontrado.remove("conta");

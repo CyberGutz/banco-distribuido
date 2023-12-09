@@ -12,6 +12,7 @@ import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.ResponseMode;
 import org.jgroups.util.Rsp;
 import org.jgroups.util.RspList;
+import org.jgroups.util.Util;
 
 import Controllers.ClusterController;
 import Controllers.ContaController;
@@ -44,6 +45,7 @@ public class Server extends UnicastRemoteObject implements API {
 			MethodCall metodo = new MethodCall("criarConta", new Object[] { usuario, senha },
 					new Class[] { String.class,String.class });
 			RequestOptions opcoes = new RequestOptions(ResponseMode.GET_ALL, timeout);
+			Util.sleep(5000);
 			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
 			System.out.println(rsp);
 			retorno = processarRespostas(rsp, estadoAtual);
@@ -84,15 +86,23 @@ public class Server extends UnicastRemoteObject implements API {
 			System.out.println("Consultando conta pra geral");
 			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo,
 					new RequestOptions(ResponseMode.GET_ALL, timeout));
+			ArrayList<Address> problematicos = new ArrayList<Address>();
 			for (Entry<Address, Rsp<User>> user : rsp.entrySet()) { // iterando as respostas dos membros
 				if (user.getValue().wasReceived()) {
 					if (user.getValue().getValue().getErro() == null) { // algum membro nao tem a conta consultada
-						conta = user.getValue().getValue();
+						if(conta.getVersao() <= user.getValue().getValue().getVersao()){
+							conta = user.getValue().getValue();
+						}else{
+							problematicos.add(user.getKey());
+						}
 					} else {
-						return null;
+						problematicos.add(user.getKey());
 					}
 				}
 			}
+			//mando os desatualizados ressincronizarem
+			cluster.getDispatcher().callRemoteMethods(problematicos, "desconectar", null, null,
+					new RequestOptions(ResponseMode.GET_NONE, timeout));
 		} catch (Exception e) {
 			return null;
 		}
@@ -142,6 +152,7 @@ public class Server extends UnicastRemoteObject implements API {
 			Transferencia transferencia = new Transferencia(origem, destino, valor);
 			MethodCall metodo = new MethodCall("transferirDinheiro", new Object[] { transferencia },
 					new Class[] { Transferencia.class });
+			Util.sleep(5000);
 			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo,
 					new RequestOptions(ResponseMode.GET_ALL, timeout));		
 			origem = processarRespostas(rsp, estadoAtual);
@@ -161,23 +172,34 @@ public class Server extends UnicastRemoteObject implements API {
 	public Double obterMontante(){
 		Double montante = -1.0;
 		try {
-			MethodCall metodo = new MethodCall("obterMontante", null, new Class[]{Double.class});
+			MethodCall metodo = new MethodCall("obterMontante", null, null);
 			System.out.println("Obtendo montante");
 			RspList<Double> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, new RequestOptions(ResponseMode.GET_ALL, timeout));
+			System.out.println(rsp);
+			ArrayList<Address> problematicos = new ArrayList<Address>();
 			for (Entry<Address, Rsp<Double>> monte: rsp.entrySet()){
 				if(monte.getValue().wasReceived()){
-					if(monte.getValue().getValue() != -1.0){
-						montante = monte.getValue().getValue();
+					Double temp = monte.getValue().getValue();
+					if(temp != -1.0){
+						System.out.println("Achou montante: " + temp);
+						if(montante < temp){
+							montante = temp;
+						}else{//retornou montante menor, há um dessincronismo aí
+							problematicos.add(monte.getKey());
+						}
+					}else{
+						problematicos.add(monte.getKey());
 					}
 				}
-				else{
-					return -1.0;
-				}
 			}
+			//mando os desatualizados ressincronizarem
+			cluster.getDispatcher().callRemoteMethods(problematicos, "desconectar", null, null,
+					new RequestOptions(ResponseMode.GET_NONE, timeout));
 		} catch (Exception e) {
 			System.out.println("Erro ao consultar montante: " + e);
 			return -1.0;
 		}
+		System.out.println("retornando: " + montante);
 		return montante;
 	}
 	

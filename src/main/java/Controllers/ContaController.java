@@ -1,12 +1,15 @@
 package Controllers;
 
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 import Models.Transferencia;
 import Models.User;
@@ -61,18 +64,12 @@ public class ContaController {
     }
 
     public static Double obterMontante(){
-        String jsonString;
         Double montante = 0.0;
-        byte[] users;
         try {
-            users = Files.readAllBytes(Paths.get("users.json"));
-            jsonString = new String(users);
-            JSONObject jsonObject = new JSONObject(jsonString);
-
-            for (String key : jsonObject.keySet()) {
-                if(key.equals("creditos")){
-                    montante += (double)jsonObject.get(key);
-                }
+            JSONArray jsonArray = new JSONArray(new JSONTokener(new FileReader("users.json")));
+            for (Object user: jsonArray) {
+                JSONObject userJson = new JSONObject(user.toString());
+                montante += userJson.getDouble("creditos");
             }
             return montante;
         } catch (IOException e) {
