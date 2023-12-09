@@ -294,6 +294,8 @@ public class ClusterController implements Receiver {
     public void desconectar(){
         System.out.println("Desconectando do canal e ressincronizando...");
         this.channel.disconnect();
+        this.dispatcher = null;
+        this.channel = null;
         this.conectarNoCanal();
     }
 

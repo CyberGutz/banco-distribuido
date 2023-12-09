@@ -189,6 +189,7 @@ public class Server extends UnicastRemoteObject implements API {
 							new Class[] { State.class },
 							new RequestOptions(ResponseMode.GET_NONE, 2000));
 				} else { // a minoria deu erro, manda esse povo ressincronizar
+					System.out.println("Expulsando processos falhos");
 					cluster.getDispatcher().callRemoteMethods(membrosComErros, "desconectar", null, null,
 							new RequestOptions(ResponseMode.GET_NONE, 2000)); // expulsa o membro pra ele ressincronizar
 				}
