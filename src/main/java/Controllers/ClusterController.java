@@ -55,6 +55,8 @@ public class ClusterController implements Receiver {
 
     private Vector<String> usersLogados = new Vector<String>();
 
+    private static int timeout = 2000;
+
     public ClusterController(JChannel channel,String ipRMI) {
         this.channel = channel;
         this.meuIP = ipRMI;
@@ -84,15 +86,15 @@ public class ClusterController implements Receiver {
         if (souCoordenador()) {
             if (!this.eraCoordenador) {
                 eraCoordenador = true;
+                System.out.println("Virei o novo coordenador");
                 rmiServer = new RMIServerController(this.meuIP);
                 rmiServer.start();
-                System.out.println("Virei o novo coordenador");
             }
         } else { // geral vai pedir o novo estado pro coordenador
             System.out.println("Composição mudou, vou pedir estado pro ademir.");
             eraCoordenador = false;
-            this.obterEstado();
         }
+        this.obterEstado();
     }
 
     public void getState(OutputStream output) {
@@ -161,10 +163,7 @@ public class ClusterController implements Receiver {
         System.out.println(this.channel.getAddress() + " fazendo login");
         System.out.println("---------------------------------------");
         User retorno = AuthController.fazerLogin(usuario, senha);
-        System.out.println("retorno login");
-        System.out.println(retorno);
         if(retorno.getErro() == null){
-            System.out.println("checando se ta logado");
             if(this.usersLogados.contains(retorno.getToken())){
                 retorno.setErro("Usuário já está logado");
             }else{//nao ta logado, adiciona-lo na lista de loagdos
@@ -313,6 +312,7 @@ public class ClusterController implements Receiver {
         boolean conectou = false;
         this.dispatcher = null;
         this.mutex = null;
+        int tentativas = 0;
         while (true) {
             try {
                 this.channel.connect("banco");
@@ -321,13 +321,16 @@ public class ClusterController implements Receiver {
                 this.mutex = new LockService(this.channel);
                 conectou = true;
                 System.out.println("Conectado!");
-                if (!this.souCoordenador()) {
-                    this.obterEstado();
-                }
+                this.obterEstado();
             } catch (Exception e) {
                 // dá uma relaxa por 2 segundos e tenta denovo.
+                if(tentativas > 3){
+                    System.out.println("Não foi possível conectar ao canal!" + e.getMessage());
+                    System.exit(1);
+                }
                 System.out.println("Erro ao tentar conectar no canal: " + e.getMessage());
                 System.out.println("Tentando novamente...");
+                tentativas++;
                 Util.sleep(2000);
             }
             if (conectou) {
@@ -344,12 +347,12 @@ public class ClusterController implements Receiver {
 
     private void obterEstado() {
         boolean obteuEstado = false;
+        int tentativas = 0;
         while (true) {
             try {
                 // vendo quem tem o estado mais recente
                 RspList<Integer> rsp = this.dispatcher.callRemoteMethods(null, "consultarVersao", null, null,
-                        new RequestOptions(ResponseMode.GET_ALL, 2000));
-                System.out.println("estado rsp: " + rsp);
+                        new RequestOptions(ResponseMode.GET_ALL, timeout));
                 int maiorVersao = 0;
                 Address maiorAddr = null;
                 for (Entry<Address, Rsp<Integer>> versao : rsp.entrySet()) {
@@ -361,12 +364,22 @@ public class ClusterController implements Receiver {
                     }
                 }
                 System.out.println("Quem tem a versão mais recente: " + maiorAddr + " Versão " + maiorVersao);
-                this.channel.getState(maiorAddr, 10000);
+                if(!maiorAddr.equals(this.getChannel().getAddress())){ //não preciso pedir o estado pra mim mesmo
+                    this.channel.getState(maiorAddr, 10000);
+                }
                 obteuEstado = true;
             } catch (Exception e) {
                 // dá uma relaxa por 2 segundos e tenta denovo.
+                if(tentativas > 3){
+                    System.out.println("Não foi possível obter o estado!" + e.getMessage());
+                    //tenta reconectar ao canal pra pegar o estado
+                    this.channel.disconnect();
+                    this.conectarNoCanal();
+                    return;
+                }
                 System.out.println("Erro ao tentar obter o estado: " + e.getMessage());
                 System.out.println("Tentando novamente...");
+                tentativas++;
                 Util.sleep(2000);
             }
             if (obteuEstado) {
