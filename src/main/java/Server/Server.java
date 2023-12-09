@@ -39,7 +39,7 @@ public class Server extends UnicastRemoteObject implements API {
 	public User criarConta(String usuario, String senha) throws RemoteException {
 		User retorno = null;
 		try {
-			State estadoAtual = new State();
+			State estadoAtual = new State(cluster);
 			System.out.println(String.format("Usuário pedindo criação de conta. Usuario %s Senha %s", usuario, senha));
 			MethodCall metodo = new MethodCall("criarConta", new Object[] { usuario, senha },
 					new Class[] { String.class,String.class });
@@ -55,8 +55,26 @@ public class Server extends UnicastRemoteObject implements API {
 	}
 
 	public User fazerLogin(String usuario, String senha) throws RemoteException {
-		System.out.println(String.format("Usuário pedindo login. Usuario %s Senha %s", usuario, senha));
-		return AuthController.fazerLogin(usuario, senha);
+		User retorno = null;
+		try {
+			State estadoAtual = new State(cluster);
+			System.out.println(estadoAtual);
+			System.out.println(String.format("Usuário pedindo login. Usuario %s Senha %s", usuario, senha));
+			MethodCall metodo = new MethodCall("fazerLogin", new Object[] { usuario, senha },
+					new Class[] { String.class,String.class });
+			RequestOptions opcoes = new RequestOptions(ResponseMode.GET_ALL, 2000);
+			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
+			System.out.println(rsp);
+			retorno = processarRespostas(rsp, estadoAtual);
+			if(retorno.getErro() == null){ 
+				//manda todo mundo adicionar o usuario como logado na instancia deles
+				cluster.getDispatcher().callRemoteMethods(null, "setUsuarioLogado",new Object[]{retorno},null,new RequestOptions(ResponseMode.GET_NONE,1000));
+			}
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+			retorno.setErro(e.getMessage());
+		}
+		return retorno;
 	}
 
 	public User consultarConta(User conta) throws RemoteException {
@@ -120,7 +138,7 @@ public class Server extends UnicastRemoteObject implements API {
 		System.out.println(
 				String.format("Usuário %s transferindo R$%.2f pro %s", origem.getNome(), valor, destino.getNome()));
 		try {
-			State estadoAtual = new State(); // fazendo um backup do estado atual
+			State estadoAtual = new State(cluster); // fazendo um backup do estado atual
 			Transferencia transferencia = new Transferencia(origem, destino, valor);
 			MethodCall metodo = new MethodCall("transferirDinheiro", new Object[] { transferencia },
 					new Class[] { Transferencia.class });
@@ -142,7 +160,7 @@ public class Server extends UnicastRemoteObject implements API {
 
 	public int consultarMontante() {
 		try {
-			State estadoAtual = new State();
+			State estadoAtual = new State(cluster);
 		} catch (Exception e) {
 			// TODO: handle exception
 		}

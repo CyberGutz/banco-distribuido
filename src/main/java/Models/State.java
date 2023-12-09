@@ -5,16 +5,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Vector;
+
+import Controllers.ClusterController;
 
 public class State implements java.io.Serializable {
 
     private byte[] users;
     private byte[] transferencias;
     private int versao;
+    private Vector<String> usersLogados;
 
-    public State() {
+    public State(ClusterController cluster) {
         try {
-   
+
             File file = new File("users.json");
 
             BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
@@ -29,25 +33,26 @@ public class State implements java.io.Serializable {
             bfis.close();
 
             this.versao = consultarVersao();
+            this.usersLogados = cluster.getUsersLogados();
         } catch (Exception e) {
-            //inicializa um estado vazio
+            // inicializa um estado vazio
             this.versao = 1;
             this.users = new byte[0];
-            this.transferencias = new byte[0]; 
+            this.transferencias = new byte[0];
         }
     }
 
-    public static int consultarVersao(){
+    public static int consultarVersao() {
         int versao;
         try {
             versao = Integer.parseInt(new String(Files.readAllBytes(Paths.get("versao.txt"))));
-        } catch (Exception e) { //primeira versao
+        } catch (Exception e) { // primeira versao
             versao = 1;
         }
         return versao;
     }
 
-    public static void atualizarVersao() throws Exception{
+    public static void atualizarVersao() throws Exception {
         int versao = consultarVersao();
         versao++;
         Files.write(Paths.get("versao.txt"), String.valueOf(versao).getBytes());
@@ -71,5 +76,9 @@ public class State implements java.io.Serializable {
 
     public int getVersao() {
         return versao;
+    }
+
+    public Vector<String> getUsersLogados() {
+        return usersLogados;
     }
 }
