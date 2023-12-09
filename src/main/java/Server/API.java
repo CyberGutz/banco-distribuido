@@ -19,4 +19,6 @@ public interface API extends Remote {
 	User transferirDinheiro(User origem,User destino,double valor) throws RemoteException;
 	
 	ArrayList<Transferencia> obterExtrato(User user) throws RemoteException;
+
+	Double obterMontante() throws RemoteException;
 }

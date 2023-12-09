@@ -1,9 +1,11 @@
 package Controllers;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -242,17 +244,12 @@ public class ClusterController implements Receiver {
         return ContaController.obterExtrato(user);
     }
 
-    public int obterMontante(){
-        // File file = new File("users.json");
-        // try {
-        //     BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
-        // } catch (FileNotFoundException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
-        // }
-        return 0;
+    public Double obterMontante(){
+        System.out.println("---------------------------------------");
+        System.out.println(this.channel.getAddress() + " obtendo montante");
+        System.out.println("---------------------------------------");
+        return ContaController.obterMontante();
     }
-
 
     public int consultarVersao() {
         return State.consultarVersao();
