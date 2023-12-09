@@ -170,7 +170,11 @@ public class Server extends UnicastRemoteObject implements API {
 	}
 
 	public Double obterMontante(){
-		Double montante = -1.0;
+		Double montante = 0.0;
+		Double erro = -1.0;
+		int erros = 0;
+		int semErros = 1;
+
 		try {
 			MethodCall metodo = new MethodCall("obterMontante", null, null);
 			System.out.println("Obtendo montante");
@@ -197,9 +201,8 @@ public class Server extends UnicastRemoteObject implements API {
 					new RequestOptions(ResponseMode.GET_NONE, timeout));
 		} catch (Exception e) {
 			System.out.println("Erro ao consultar montante: " + e);
-			return -1.0;
+			return erro;
 		}
-		System.out.println("retornando: " + montante);
 		return montante;
 	}
 	
