@@ -71,7 +71,7 @@ public class ContaController {
 
             for (String key : jsonObject.keySet()) {
                 if(key.equals("creditos")){
-                    montante += (double)jsonObject.get(key);
+                    montante += jsonObject.getDouble(key);
                 }
             }
             return montante;
