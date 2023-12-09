@@ -147,7 +147,13 @@ public class ClusterController implements Receiver {
         System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " criando conta");
         System.out.println("---------------------------------------");
-        return AuthController.criarConta(usuario, senha);
+        Util.sleep(5000);
+        User retorno = AuthController.criarConta(usuario, senha);
+        if(retorno.getErro() == null){
+            //adiciona como logado
+            this.usersLogados.add(retorno.getToken());
+        }
+        return retorno;
     }
 
     public User fazerLogin(String usuario, String senha) {
@@ -214,6 +220,7 @@ public class ClusterController implements Receiver {
 
         System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " transferindo dinheiro");
+        Util.sleep(5000);
 
         User origem = transferencia.getUserOrigem();
         User destino = transferencia.getUserDestino();
