@@ -230,17 +230,12 @@ public class ClusterController implements Receiver {
         return ContaController.obterExtrato(user);
     }
 
-    public int obterMontante(){
-        File file = new File("users.json");
-        try {
-            BufferedInputStream bfis = new BufferedInputStream(new FileInputStream(file));
-            bfis.close();
-        } catch (IOException e) {
-            System.out.println(e);
-        }
-        return 0;
+    public Double obterMontante(){
+        System.out.println("---------------------------------------");
+        System.out.println(this.channel.getAddress() + " obtendo montante");
+        System.out.println("---------------------------------------");
+        return ContaController.obterMontante();
     }
-
 
     public int consultarVersao() {
         return State.consultarVersao();

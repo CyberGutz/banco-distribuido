@@ -13,9 +13,9 @@ if (-not (Test-Path -Path "target" -PathType Container) -or $args -contains "-r"
 if ($args -contains "-c"){
     Start-Process -FilePath "cmd.exe" -ArgumentList '/k mvnw exec:java -q -D"exec.mainClass"="Client"'
 } elseif ($args -contains "-s"){
-    Start-Process -FilePath "cmd.exe" -ArgumentList '/k mvnw exec:java -q -D"exec.mainClass"="Server.Server" -D"java.net.preferIPv4Stack"="true"'
+    Start-Process -FilePath "cmd.exe" -ArgumentList '/k mvnw exec:java -q -D"exec.mainClass"="Server.Server" -Djgroups.bind_addr=26.61.192.82'
 } else {
-    Start-Process -FilePath "cmd.exe" -ArgumentList '/k mvnw exec:java -q -D"exec.mainClass"="Server.Server" -D"java.net.preferIPv4Stack"="true"'
+    Start-Process -FilePath "cmd.exe" -ArgumentList '/k mvnw exec:java -q -D"exec.mainClass"="Server.Server" -Djgroups.bind_addr=26.61.192.82'
     Start-Sleep 2
     Start-Process -FilePath "cmd.exe" -ArgumentList '/k mvnw exec:java -q -D"exec.mainClass"="Client"'
 }
