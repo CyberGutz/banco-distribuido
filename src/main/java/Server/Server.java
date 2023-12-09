@@ -155,8 +155,8 @@ public class Server extends UnicastRemoteObject implements API {
 		ArrayList<Address> membrosComErros = new ArrayList<Address>();
 		int erros = 0;
 		int semErros = 0;
-		String msg = "";
 		User retorno = null;
+		User erro = null;
 		try {
 
 			for (Entry<Address, Rsp<User>> user : rsp.entrySet()) {
@@ -170,15 +170,17 @@ public class Server extends UnicastRemoteObject implements API {
 					retorno = user.getValue().getValue();
 				} else {
 					erros++;
-					msg = user.getValue().getValue().getErro();
-					System.out.println("Erro " + user.getKey() + ": " + msg);
+					erro = user.getValue().getValue();
+					System.out.println("Erro " + user.getKey() + ": " + erro.getErro());
 					membrosComErros.add(user.getKey());
 				}
 			}
 
 			if (erros > 0) {
-
-				System.out.println(rsp.size());
+				if (erros == rsp.size()) {// todos deram erro
+					retorno = erro;
+					throw new Exception(retorno.getErro());
+				}
 				if (erros > semErros && semErros > 0) { // A maioria deu erro
 					System.out.println("Revertendo...");
 					cluster.getDispatcher().callRemoteMethods(membrosSemErros,
@@ -189,10 +191,6 @@ public class Server extends UnicastRemoteObject implements API {
 				} else { // a minoria deu erro, manda esse povo ressincronizar
 					cluster.getDispatcher().callRemoteMethods(membrosComErros, "desconectar", null, null,
 							new RequestOptions(ResponseMode.GET_NONE, 2000)); // expulsa o membro pra ele ressincronizar
-				}
-
-				if (erros == rsp.size()) {// todos deram erro
-					throw new Exception(msg);
 				}
 				throw new Exception("Serviço indisponível,tente novamente mais tarde!");
 			}
