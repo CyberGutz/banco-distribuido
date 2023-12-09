@@ -6,9 +6,9 @@
     <PING />
     <FD_ALL timeout="2000" interval="100" timeout_check_interval="1000"/>
     <VERIFY_SUSPECT />
-    <pbcast.NAKACK2 />
+    <pbcast.NAKACK2/>
     <pbcast.STATE_TRANSFER /> 
     <CENTRAL_LOCK /> 
     <pbcast.GMS/> 
-    <SEQUENCER />
+    <SEQUENCER/>
 </config>

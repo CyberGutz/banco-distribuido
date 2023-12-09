@@ -8,7 +8,11 @@ public class AuthController {
     
         User user = new User(usuario,senha);
 		try {
-            if(user.getUserDB(false) == null) user.salvar();
+            if(user.getUserDB(false) == null) {
+				user.salvar(); 
+			}else{
+				throw new Exception("Conta já existe");
+			}
 		} catch (Exception e) {
 			user.setErro(e.getMessage());
 		}
