@@ -165,6 +165,7 @@ public class Client {
 				System.out.println("1- Ver Saldo");
 				System.out.println("2- Transferir dinheiro");
 				System.out.println("3- Ver Extrato");
+				System.out.println("4- Obter Montante");
 				System.out.println("------------------");
 				System.out.print("Selecione a opcao desejada: ");
 				op = scanner.nextInt();
@@ -241,6 +242,18 @@ public class Client {
 						}
 						System.out.println("----------------------------------------------------");
 						break;
+					}
+					case 4: {
+						Double montante = objetoRemoto.obterMontante();
+						System.out.println("------- Montante do Banco --------");
+						if(montante == -1.0){
+							System.out.println("Erro ao consultar montante!");
+						}
+						else{
+							System.out.println("##################################");
+							System.out.println("Montante total do Banco: " + montante);
+							System.out.println("##################################");
+						}
 					}
 					default: {
 						op = -1;

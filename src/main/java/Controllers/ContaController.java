@@ -1,7 +1,12 @@
 package Controllers;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import org.json.JSONObject;
 
 import Models.Transferencia;
 import Models.User;
@@ -53,6 +58,27 @@ public class ContaController {
         } catch (Exception e) {
             return null;
         }
-    };
+    }
+
+    public static Double obterMontante(){
+        String jsonString;
+        Double montante = 0.0;
+        byte[] users;
+        try {
+            users = Files.readAllBytes(Paths.get("users.json"));
+            jsonString = new String(users);
+            JSONObject jsonObject = new JSONObject(jsonString);
+
+            for (String key : jsonObject.keySet()) {
+                if(key.equals("creditos")){
+                    montante += (double)jsonObject.get(key);
+                }
+            }
+            return montante;
+        } catch (IOException e) {
+            System.out.println("Erro ao consultar montante: " + e);
+            return -1.0;
+        }
+    }
 
 }

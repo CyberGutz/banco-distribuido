@@ -140,16 +140,29 @@ public class Server extends UnicastRemoteObject implements API {
 		return ContaController.obterExtrato(user);
 	}
 
-	public int consultarMontante() {
+	public Double obterMontante(){
+		Double montante = -1.0;
 		try {
-			State estadoAtual = new State();
+			MethodCall metodo = new MethodCall("obterMontante", null, new Class[]{Double.class});
+			System.out.println("Obtendo montante");
+			RspList<Double> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, new RequestOptions(ResponseMode.GET_ALL, 2000));
+			for (Entry<Address, Rsp<Double>> monte: rsp.entrySet()){
+				if(monte.getValue().wasReceived()){
+					if(monte.getValue().getValue() != -1.0){
+						montante = monte.getValue().getValue();
+					}
+				}
+				else{
+					return -1.0;
+				}
+			}
 		} catch (Exception e) {
-			// TODO: handle exception
+			System.out.println("Erro ao consultar montante: " + e);
+			return -1.0;
 		}
-
-		return 0;
+		return montante;
 	}
-
+	
 	private static User processarRespostas(RspList<User> rsp, State estadoAtual) {
 		ArrayList<Address> membrosSemErros = new ArrayList<Address>();
 		ArrayList<Address> membrosComErros = new ArrayList<Address>();
