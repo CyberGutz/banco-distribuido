@@ -262,7 +262,23 @@ public class ClusterController implements Receiver {
         return State.consultarVersao();
     }
 
-
+    // Destruir instância do Login.
+    public boolean logout(User user){
+        String token = user.getToken();
+        if (usersLogados.contains(token)){
+            usersLogados.remove(token);
+            System.out.println("---------------------------------------");
+            System.out.println("Logout realizado com sucesso.");
+            System.out.println("---------------------------------------");
+            return true;
+        }
+        else{
+            System.out.println("---------------------------------------");
+            System.out.println("Não existe usuário logado com o token especificado.");
+            System.out.println("---------------------------------------");
+            return false;
+        }
+    }
 
     // ----------------------------------------------------
     // Getters e Métodos Utilitarios --------

@@ -232,4 +232,15 @@ public class Server extends UnicastRemoteObject implements API {
 		return retorno;
 	}
 
+	public boolean logout(User user){
+		try {
+			MethodCall metodo = new MethodCall("logout", new Object[]{user}, new Class[]{User.class});
+			cluster.getDispatcher().callRemoteMethods(null, metodo, new RequestOptions(ResponseMode.GET_ALL, timeout));
+			return true;
+		} catch (Exception e) {
+			System.out.println("Erro ao terminar login: " + e);
+			return false;
+		}
+	}
+
 }
