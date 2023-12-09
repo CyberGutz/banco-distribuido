@@ -12,6 +12,7 @@ import org.jgroups.blocks.RequestOptions;
 import org.jgroups.blocks.ResponseMode;
 import org.jgroups.util.Rsp;
 import org.jgroups.util.RspList;
+import org.jgroups.util.Util;
 
 import Controllers.AuthController;
 import Controllers.ClusterController;
@@ -44,6 +45,7 @@ public class Server extends UnicastRemoteObject implements API {
 			MethodCall metodo = new MethodCall("criarConta", new Object[] { usuario, senha },
 					new Class[] { String.class,String.class });
 			RequestOptions opcoes = new RequestOptions(ResponseMode.GET_ALL, 2000);
+			Util.sleep(5000);
 			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
 			System.out.println(rsp);
 			retorno = processarRespostas(rsp, estadoAtual);
@@ -142,6 +144,7 @@ public class Server extends UnicastRemoteObject implements API {
 			Transferencia transferencia = new Transferencia(origem, destino, valor);
 			MethodCall metodo = new MethodCall("transferirDinheiro", new Object[] { transferencia },
 					new Class[] { Transferencia.class });
+			Util.sleep(5000);
 			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo,
 					new RequestOptions(ResponseMode.GET_ALL, 2000));		
 			origem = processarRespostas(rsp, estadoAtual);
