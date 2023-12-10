@@ -133,7 +133,6 @@ public class User implements java.io.Serializable {
         JSONObject userEncontrado = this.getUserDB(false);
 
         if (userEncontrado != null) {
-
             int conta = userEncontrado.getInt("conta");
             double creditos = userEncontrado.getDouble("creditos");
             String token = userEncontrado.getString("senha");
