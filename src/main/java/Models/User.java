@@ -150,8 +150,7 @@ public class User implements java.io.Serializable {
 
             // verifica se a combinação usuario e senha inserida pelo usuario gera o token
             // de autenticação criado para o mesmo
-            if (User.criarToken(userLogin.toString()).equals(User.criarToken(userEncontrado.toString()))) {
-                // retorno.put("token", jsonUser.getString("senha"));
+            if (User.criarToken(userLogin.toString()).equals(token)) {
                 this.setConta(conta);
                 this.setCreditos(creditos);
                 this.setToken(token);

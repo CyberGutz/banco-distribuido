@@ -169,8 +169,8 @@ public class Server extends UnicastRemoteObject implements API {
 		System.out.println(String.format("Usuário %s consultando extrato", user.getNome()));
 		try{
 			MethodCall metodo = new MethodCall("obterExtrato", new Object[] {user}, new Class[] {User.class});
-			Rsp<ArrayList<Transferencia>> rsp = cluster.getDispatcher().callRemoteMethod(cluster.getRandomMember(), metodo, null);
-			return rsp.getValue();
+			RspList<ArrayList<Transferencia>> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, new RequestOptions(ResponseMode.GET_FIRST,timeout));
+			return rsp.getFirst();
 		} catch (Exception e){
 			System.out.println("Erro ao consultar extrato: " + e);
 			return null;
@@ -180,9 +180,7 @@ public class Server extends UnicastRemoteObject implements API {
 	public Double obterMontante(){
 		Double montante = 0.0;
 		Double erro = -1.0;
-		int erros = 0;
-		int semErros = 1;
-
+		
 		try {
 			MethodCall metodo = new MethodCall("obterMontante", null, null);
 			System.out.println("Obtendo montante");
