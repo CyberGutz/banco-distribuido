@@ -1,0 +1,7 @@
+um arquivo texto LEIAME.txt contendo informações de: (i) como compilar e (ii) como
+executar via terminal CLI o(s) programa(s) em um sistema computacional compatível com o
+padrão POSIX (ex.s: GNU/linux, MacOS/darwin, Windows/cygwin);
+
+Para compilar o nosso sistema distribuido, utilizando os raquivos run-windows.ps1/ run-linux.sh, é necessário apenas
+executar o comando dependendo do sistema computacional e adicionar -r para recompilar, -s para executar apenas o servidor
+-c para executar apenas o cliente e não colocar nenhum parametro para executar ambos
