@@ -1,6 +1,5 @@
 package Server;
 
-import java.lang.reflect.Method;
 import java.rmi.*;
 import java.rmi.server.*;
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import org.jgroups.util.RspList;
 import org.jgroups.util.Util;
 
 import Controllers.ClusterController;
-import Controllers.ContaController;
 import Models.State;
 import Models.Transferencia;
 import Models.User;
@@ -46,9 +44,7 @@ public class Server extends UnicastRemoteObject implements API {
 			MethodCall metodo = new MethodCall("criarConta", new Object[] { usuario, senha },
 					new Class[] { String.class,String.class });
 			RequestOptions opcoes = new RequestOptions(ResponseMode.GET_ALL, timeout);
-			Util.sleep(5000);
 			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
-			System.out.println(rsp);
 			retorno = processarRespostas(rsp, estadoAtual);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
@@ -67,7 +63,6 @@ public class Server extends UnicastRemoteObject implements API {
 					new Class[] { String.class,String.class });
 			RequestOptions opcoes = new RequestOptions(ResponseMode.GET_ALL, timeout);
 			RspList<User> rsp = cluster.getDispatcher().callRemoteMethods(null, metodo, opcoes);
-			System.out.println(rsp);
 			retorno = processarRespostas(rsp, estadoAtual);
 			if(retorno.getErro() == null){ 
 				//manda todo mundo adicionar o usuario como logado na instancia deles

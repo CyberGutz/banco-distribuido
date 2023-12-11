@@ -1,11 +1,9 @@
 package Controllers;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -57,7 +55,7 @@ public class ClusterController implements Receiver {
 
     private static int timeout = 2000;
 
-    public ClusterController(JChannel channel,String ipRMI) {
+    public ClusterController(JChannel channel, String ipRMI) {
         this.channel = channel;
         this.meuIP = ipRMI;
         this.conectarNoCanal();
@@ -149,10 +147,9 @@ public class ClusterController implements Receiver {
         System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " criando conta");
         System.out.println("---------------------------------------");
-        Util.sleep(5000);
         User retorno = AuthController.criarConta(usuario, senha);
-        if(retorno.getErro() == null){
-            //adiciona como logado
+        if (retorno.getErro() == null) {
+            // adiciona como logado
             this.usersLogados.add(retorno.getToken());
         }
         return retorno;
@@ -163,10 +160,10 @@ public class ClusterController implements Receiver {
         System.out.println(this.channel.getAddress() + " fazendo login");
         System.out.println("---------------------------------------");
         User retorno = AuthController.fazerLogin(usuario, senha);
-        if(retorno.getErro() == null){
-            if(this.usersLogados.contains(retorno.getToken())){
+        if (retorno.getErro() == null) {
+            if (this.usersLogados.contains(retorno.getToken())) {
                 retorno.setErro("Usuário já está logado");
-            }else{//nao ta logado, adiciona-lo na lista de loagdos
+            } else {// nao ta logado, adiciona-lo na lista de loagdos
                 this.usersLogados.add(retorno.getToken());
             }
         }
@@ -250,7 +247,7 @@ public class ClusterController implements Receiver {
         return ContaController.obterExtrato(user);
     }
 
-    public Double obterMontante(){
+    public Double obterMontante() {
         System.out.println("---------------------------------------");
         System.out.println(this.channel.getAddress() + " obtendo montante");
         System.out.println("---------------------------------------");
@@ -262,16 +259,15 @@ public class ClusterController implements Receiver {
     }
 
     // Destruir instância do Login.
-    public boolean logout(User user){
+    public boolean logout(User user) {
         String token = user.getToken();
-        if (usersLogados.contains(token)){
+        if (usersLogados.contains(token)) {
             usersLogados.remove(token);
             System.out.println("---------------------------------------");
             System.out.println("Logout realizado com sucesso.");
             System.out.println("---------------------------------------");
             return true;
-        }
-        else{
+        } else {
             System.out.println("---------------------------------------");
             System.out.println("Não existe usuário logado com o token especificado.");
             System.out.println("---------------------------------------");
@@ -300,22 +296,20 @@ public class ClusterController implements Receiver {
                         this.channel.getView().getMembers().get(0)));
     }
 
-    public Vector<String> getUsersLogados(){
+    public Vector<String> getUsersLogados() {
         return usersLogados;
     }
 
-    public void setUsersLogados(String token){
+    public void setUsersLogados(String token) {
         usersLogados.add(token);
     }
 
     private void conectarNoCanal() {
         boolean conectou = false;
-        this.dispatcher = null;
-        this.mutex = null;
         int tentativas = 0;
         while (true) {
             try {
-                this.channel.connect("banco");
+                this.channel = channel.connect("banco");
                 this.dispatcher = new RpcDispatcher(this.channel, this);
                 this.dispatcher.setReceiver(this);
                 this.mutex = new LockService(this.channel);
@@ -324,7 +318,7 @@ public class ClusterController implements Receiver {
                 this.obterEstado();
             } catch (Exception e) {
                 // dá uma relaxa por 2 segundos e tenta denovo.
-                if(tentativas > 3){
+                if (tentativas > 3) {
                     System.out.println("Não foi possível conectar ao canal!" + e.getMessage());
                     System.exit(1);
                 }
@@ -339,7 +333,7 @@ public class ClusterController implements Receiver {
         }
     }
 
-    public void desconectar(){
+    public void desconectar() {
         System.out.println("Desconectando do canal e ressincronizando...");
         this.channel.disconnect();
         this.conectarNoCanal();
@@ -348,6 +342,7 @@ public class ClusterController implements Receiver {
     private void obterEstado() {
         boolean obteuEstado = false;
         int tentativas = 0;
+        System.out.println("Obtendo estado");
         while (true) {
             try {
                 // vendo quem tem o estado mais recente
@@ -364,15 +359,15 @@ public class ClusterController implements Receiver {
                     }
                 }
                 System.out.println("Quem tem a versão mais recente: " + maiorAddr + " Versão " + maiorVersao);
-                if(!maiorAddr.equals(this.getChannel().getAddress())){ //não preciso pedir o estado pra mim mesmo
+                if (!maiorAddr.equals(this.getChannel().getAddress())) { // não preciso pedir o estado pra mim mesmo
                     this.channel.getState(maiorAddr, 10000);
                 }
                 obteuEstado = true;
             } catch (Exception e) {
                 // dá uma relaxa por 2 segundos e tenta denovo.
-                if(tentativas > 3){
+                if (tentativas > 3) {
                     System.out.println("Não foi possível obter o estado!" + e.getMessage());
-                    //tenta reconectar ao canal pra pegar o estado
+                    // tenta reconectar ao canal pra pegar o estado
                     this.channel.disconnect();
                     this.conectarNoCanal();
                     return;
