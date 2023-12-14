@@ -41,7 +41,7 @@ public class RMIServerController extends Thread {
             System.setProperty("java.rmi.server.hostname", this.meuIP);
             Server obj = new Server();
             System.out.println("IP do Registry: " + this.meuIP);
-            String rmiAddr = String.format("rmi://%s/banco", this.meuIP);
+            String rmiAddr = String.format("rmi://%s/testeapresentacao", this.meuIP);
             try {
                 java.rmi.registry.LocateRegistry.getRegistry(1099);
                 System.out.println("Pegando serviço registry já criado");

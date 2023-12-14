@@ -17,10 +17,10 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.Vector;
-import java.util.Map.Entry;
 import java.util.concurrent.locks.Lock;
 
 import org.jgroups.Address;
@@ -47,7 +47,7 @@ public class ClusterController implements Receiver {
 
     private RMIServerController rmiServer;
 
-    static final int TAMANHO_MINIMO_CLUSTER = 1;
+    static final int TAMANHO_MINIMO_CLUSTER = 3;
     private boolean eraCoordenador = false;
     private String meuIP = null;
 
@@ -81,6 +81,7 @@ public class ClusterController implements Receiver {
 
     // -- Métodos de Gerenciamento do Grupo
     public void viewAccepted(View view) {
+        System.out.println("Composição mudou.");
         if (souCoordenador()) {
             if (!this.eraCoordenador) {
                 eraCoordenador = true;
@@ -89,10 +90,9 @@ public class ClusterController implements Receiver {
                 rmiServer.start();
             }
         } else { // geral vai pedir o novo estado pro coordenador
-            System.out.println("Composição mudou, vou pedir estado pro ademir.");
             eraCoordenador = false;
         }
-        this.obterEstado();
+        // this.obterEstado();
     }
 
     public void getState(OutputStream output) {
@@ -309,7 +309,7 @@ public class ClusterController implements Receiver {
         int tentativas = 0;
         while (true) {
             try {
-                this.channel = channel.connect("banco");
+                this.channel = channel.connect("testeapresentacao");
                 this.dispatcher = new RpcDispatcher(this.channel, this);
                 this.dispatcher.setReceiver(this);
                 this.mutex = new LockService(this.channel);
